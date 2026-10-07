@@ -128,6 +128,59 @@ function calc(){
 }
 function setQty(q){document.getElementById('quantity').value=q;calc()}
 async function placeOrder(){
+  const platform=document.getElementById('platform')?.value||'';
+  const providerServiceId=Number(document.getElementById('service')?.value||0);
+  const quantity=Number(document.getElementById('quantity')?.value||0);
+  const social_link=document.getElementById('link')?.value?.trim()||'';
+  const msg=document.getElementById('orderMsg');
+  const selected=state.providerServices.find(s=>Number(s.service)===providerServiceId);
+
+  if(!selected||!social_link||quantity<Number(selected.min||1)||quantity>Number(selected.max||Infinity)){
+    msg.innerHTML='<p class="error">Check the service, link and quantity. Use a public link and stay within the provider limits.</p>';
+    return;
+  }
+
+  const total=Math.ceil((Number(selected.rate)*quantity/1000)*1.5);
+
+  if(total>state.balance){
+    msg.innerHTML=`<p class="error">Insufficient wallet balance. You need ${money(total)} and your balance is ${money(state.balance)}. Fund your wallet first.</p>`;
+    return;
+  }
+
+  msg.innerHTML='<p class="status">Submitting your order to the provider...</p>';
+
+  const{data,error}=await sb.functions.invoke('smm-provider',{
+    body:{
+      action:'place_order',
+      provider_service_id:providerServiceId,
+      platform,
+      service:selected.name,
+      social_link,
+      quantity
+    }
+  });
+
+  if(error){
+    let detail=error.message;
+    try{
+      if(error.context){
+        const x=await error.context.json();
+        detail=x.error||detail;
+      }
+    }catch{}
+    msg.innerHTML=`<p class="error">${esc(detail)}</p>`;
+    return;
+  }
+
+  if(!data?.ok){
+    msg.innerHTML=`<p class="error">${esc(data?.error||'The provider did not accept the order.')}</p>`;
+    return;
+  }
+
+  await loadOrders();
+
+  msg.innerHTML=`<div class="status good" style="margin-top:12px">Order #${esc(data.order_id)} submitted successfully. Provider order #${esc(data.provider_order_id)}. ${money(data.total_ngn)} was deducted from your wallet.</div>`;
+}
   const platform=document.getElementById('platform').value;
   const service=document.getElementById('service').value;
   const quantity=Number(document.getElementById('quantity').value);
