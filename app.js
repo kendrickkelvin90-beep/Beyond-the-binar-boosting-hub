@@ -17,6 +17,37 @@ async function loadAdmin(){const [u,o,w,t]=await Promise.all([sb.from('users').s
 function topupHtml(rows){if(!rows.length)return '<div class="empty">No wallet funding requests yet.</div>';return rows.map(t=>`<div class="order"><div class="orderhead"><b>Top-up #${esc(t.id)}</b><b>${money(t.amount_ngn)}</b></div><small>Reference: ${esc(t.payment_reference||'Not provided')}</small><div class="status" style="margin-top:9px">${esc(t.status)}</div></div>`).join('')}
 
 function walletCard(){return `<section class="card"><div class="title"><div class="num">03</div><div><h3>Funds Wallet</h3><p>Available balance: <b>${money(state.balance)}</b></p></div></div><div class="payment"><small>OPAY ACCOUNT</small><strong>9165647651</strong><span>Justice Trust Ugoala</span></div><button class="btn secondary" onclick="navigator.clipboard?.writeText('9165647651')">Copy OPay account</button><div class="notice" style="margin-top:12px">Send your chosen amount to the OPay account above, then enter the payment reference. Your wallet is credited after admin verification.</div><label style="margin-top:12px">Amount to fund (₦)</label><input id="topupAmount" type="number" min="100" step="100" placeholder="e.g. 5000"><label>OPay payment reference *</label><input id="topupRef" placeholder="Enter your OPay transaction reference"><button class="btn" onclick="submitTopup()">Submit funding request</button><div id="topupMsg"></div><div style="margin-top:14px"><h4 style="margin-bottom:8px">Funding history</h4>${topupHtml(state.topups)}</div></section>`}
+async function submitTopup(){
+  const amount=Math.round(Number(document.getElementById('topupAmount')?.value||0));
+  const reference=document.getElementById('topupRef')?.value?.trim()||'';
+  const msg=document.getElementById('topupMsg');
+
+  if(!Number.isFinite(amount)||amount<100){
+    msg.innerHTML='<p class="error">Enter a funding amount of at least ₦100.</p>';
+    return;
+  }
+
+  if(!reference){
+    msg.innerHTML='<p class="error">Enter your OPay payment reference.</p>';
+    return;
+  }
+
+  const{error}=await sb.from('wallet_topups').insert({
+    user_id:state.profile.id,
+    amount_ngn:amount,
+    payment_reference:reference
+  });
+
+  if(error){
+    msg.innerHTML=`<p class="error">${esc(error.message)}</p>`;
+    return;
+  }
+
+  msg.innerHTML='<p class="status good">Funding request submitted. Your wallet will be credited after admin verification.</p>';
+
+  await loadOrders();
+  setTimeout(render,700);
+}
 function home(){return shell(`<section class="hero"><small>SOCIAL PROMOTION</small><h2>Grow your social presence.<br><em>One order at a time.</em></h2><p>Choose your platform, paste the exact link, set your quantity and submit your order.</p></section>${!state.session?`<section class="card"><div class="title"><div class="num">00</div><div><h3>Account required</h3><p>Create an account or sign in before placing a boost order.</p></div></div><button class="btn" onclick="showAuth('register')">Create account</button> <button class="btn secondary" onclick="showAuth('login')">Log in</button></section>`:`${orderForm()}${walletCard()}<section class="card history"><div class="title"><div class="num">04</div><div><h3>Order history</h3><p>Orders paid from your wallet.</p></div></div>${ordersHtml(state.orders)}</section>`}`)}
 function orderForm(){return `<div class="grid"><section class="card"><div class="title"><div class="num">01</div><div><h3>Build your order</h3><p>Tell us exactly where and what to deliver.</p></div></div><label>Social platform</label><select id="platform"><option>Instagram</option><option>TikTok</option><option>Facebook</option><option>Telegram</option><option>X</option></select><label>Service</label><select id="service" onchange="calc()"><option value="followers">Followers — ₦4,500 / 1,000</option><option value="likes">Likes — ₦800 / 1,000</option><option value="views">Views — ₦1,200 / 1,000</option></select><label>Social media link *</label><input id="link" type="url" required placeholder="https://instagram.com/yourprofile"><label>Quantity *</label><input id="quantity" type="number" min="1" step="1" value="1000" oninput="calc()"><div class="quick">${[500,1000,2500,5000].map(q=>`<button type="button" onclick="setQty(${q})">${q.toLocaleString()}</button>`).join('')}</div><p class="hint" style="margin-top:8px">Enter the exact number you want.</p><div class="total"><div><small>ORDER TOTAL</small><strong id="total">₦4,500</strong></div><button class="btn" onclick="placeOrder()">Continue</button></div><div id="orderMsg"></div></section><aside class="card"><div class="title"><div class="num">02</div><div><h3>Pay with OPay</h3><p>Use the account below for your order.</p></div></div><div class="payment"><small>OPAY ACCOUNT</small><strong>9165647651</strong><span>Justice Trust Ugoala</span></div><button class="btn secondary" onclick="navigator.clipboard?.writeText('9165647651')">Copy account number</button><div class="notice" style="margin-top:12px">After payment, your order remains <b>Awaiting verification</b> until payment is confirmed.</div></aside></div>`}
 function calc(){const q=Number(document.getElementById('quantity')?.value||0),s=document.getElementById('service')?.value||'followers';const el=document.getElementById('total');if(el)el.textContent=money(Math.round(rates[s]*q/1000))}
