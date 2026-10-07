@@ -25,6 +25,6 @@ async function addCredit(uid,name){const raw=prompt(`Enter wallet amount for ${n
 async function updateOrder(id,status,payment_status){const {error}=await sb.from('boost_orders').update({status,payment_status}).eq('id',id);if(error)alert(error.message);else{await loadOrders();render()}}
 document.addEventListener('click',async e=>{const b=e.target.closest('.admin-action');if(!b)return;const action=b.dataset.action,id=Number(b.dataset.id);if(action==='credit'){addCredit(id,b.dataset.name);return}if(action==='verify')updateOrder(id,'verified','verified');if(action==='reject')updateOrder(id,'cancelled','rejected');if(action==='complete')updateOrder(id,'completed','verified')});
 async function logout(){await sb.auth.signOut();await refresh()}
-function render()
+
 function render(){if(!state.session){if(app.dataset.auth==='1')return;app.innerHTML=home();return}app.dataset.auth='0';app.innerHTML=state.profile?.role==='admin'?admin():home();}
 sb.auth.onAuthStateChange(()=>setTimeout(refresh,0));refresh();
