@@ -110,7 +110,22 @@ function orderForm(){
 
   return `<div class="grid"><section class="card"><div class="title"><div class="num">01</div><div><h3>Build your order</h3><p>Tell us exactly where and what to deliver.</p></div></div><label>Social platform</label><select id="platform" onchange="updateProviderServices()">${platforms.map(p=>`<option value="${esc(p)}">${platformLabel(p)}</option>`).join('')}</select><label>Service</label><select id="service" onchange="calc()">${services.map(s=>`<option value="${esc(s.service)}">${esc(s.name)} — ₦${Number(s.rate).toLocaleString()} / 1,000</option>`).join('')}</select><label>Social media link *</label><input id="link" type="url" required placeholder="https://instagram.com/yourprofile"><label>Quantity *</label><input id="quantity" type="number" min="${Number(services[0]?.min||1)}" max="${Number(services[0]?.max||0)}" step="1" value="${Number(services[0]?.min||1000)}" oninput="calc()"><div class="quick">${[500,1000,2500,5000].map(q=>`<button type="button" onclick="setQty(${q})">${q.toLocaleString()}</button>`).join('')}</div><p class="hint" style="margin-top:8px">Enter the exact number you want.</p><div class="total"><div><small>ORDER TOTAL</small><strong id="total">₦0</strong></div><button class="btn" onclick="placeOrder()">Continue</button></div><div id="orderMsg"></div></section><aside class="card"><div class="title"><div class="num">02</div><div><h3>Pay with OPay</h3><p>Use your wallet balance for your order.</p></div></div><div class="payment"><small>OPAY ACCOUNT</small><strong>9165647651</strong><span>Justice Trust Ugoala</span></div><button class="btn secondary" onclick="navigator.clipboard?.writeText('9165647651')">Copy account number</button><div class="notice" style="margin-top:12px">Fund your wallet first. Your wallet is charged when the provider accepts the order.</div></aside></div>`;
 }
-function calc(){const q=Number(document.getElementById('quantity')?.value||0),s=document.getElementById('service')?.value||'followers';const el=document.getElementById('total');if(el)el.textContent=money(Math.round(rates[s]*q/1000))}
+function calc(){
+  const q=Number(document.getElementById('quantity')?.value||0);
+  const id=Number(document.getElementById('service')?.value||0);
+  const s=state.providerServices.find(x=>Number(x.service)===id);
+  const el=document.getElementById('total');
+
+  if(!el||!s)return;
+
+  el.textContent=money(Math.ceil((Number(s.rate)*q/1000)*1.5));
+
+  const input=document.getElementById('quantity');
+  if(input){
+    input.min=Number(s.min||1);
+    input.max=Number(s.max||0);
+  }
+}
 function setQty(q){document.getElementById('quantity').value=q;calc()}
 async function placeOrder(){
   const platform=document.getElementById('platform').value;
