@@ -3,7 +3,7 @@ const SUPABASE_KEY='sb_publishable_2rqvTatoYZmq85T5RDUiAA_3cbMW1Rm';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const rates={followers:4500,likes:800,views:1200};
 const serviceName={followers:'Followers',likes:'Likes',views:'Views'};
-let state={session:null,profile:null,orders:[],balance:0,topups:[],customers:[],adminOrders:[],adminTopups:[],walletBalances:{},view:'home'};
+let state={session:null,profile:null,orders:[],balance:0,topups:[],customers:[],adminOrders:[],adminTopups:[],walletBalances:{},providerServices:[],view:'home'};
 const app=document.getElementById('app');
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const money=n=>'₦'+Number(n||0).toLocaleString();
