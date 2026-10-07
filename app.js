@@ -181,41 +181,41 @@ async function placeOrder(){
 
   msg.innerHTML=`<div class="status good" style="margin-top:12px">Order #${esc(data.order_id)} submitted successfully. Provider order #${esc(data.provider_order_id)}. ${money(data.total_ngn)} was deducted from your wallet.</div>`;
 }
-  const platform=document.getElementById('platform').value;
-  const service=document.getElementById('service').value;
-  const quantity=Number(document.getElementById('quantity').value);
-  const social_link=document.getElementById('link').value.trim();
-  const msg=document.getElementById('orderMsg');
+  
+  
+  
+  
+  
 
-  if(!social_link||quantity<1){
-    msg.innerHTML='<p class="error">Enter a valid link and quantity.</p>';
-    return;
-  }
+  
+    
+    
+  
 
-  const total=Math.round(rates[service]*quantity/1000);
+  
 
-  if(total>state.balance){
-    msg.innerHTML=`<p class="error">Insufficient wallet balance. You need ${money(total)} and your balance is ${money(state.balance)}. Fund your wallet first.</p>`;
-    return;
-  }
+  
+  
+    
+  
 
-  const{data,error}=await sb.rpc('place_wallet_boost',{
-    p_platform:platform,
-    p_service:service,
-    p_social_link:social_link,
-    p_quantity:quantity
-  });
+  
+    
+    
+    
+    
+  
 
-  if(error){
-    msg.innerHTML=`<p class="error">${esc(error.message)}</p>`;
-    return;
-  }
+  
+    
+    
+  
 
-  msg.innerHTML=`<div class="status good" style="margin-top:12px">Order #${esc(data)} submitted successfully. ${money(total)} has been deducted from your wallet.</div>`;
+  
 
-  await loadOrders();
-  setTimeout(render,800);
-}
+
+  
+
 function ordersHtml(rows){if(!rows.length)return '<div class="empty">No orders yet.</div>';return rows.map(o=>`<div class="order"><div class="orderhead"><b>#${esc(o.id)} · ${esc(o.platform)} ${esc(serviceName[o.service]||o.service)}</b><b>${money(o.total_amount_ngn)}</b></div><small>${esc(o.social_link)} · Qty ${Number(o.quantity).toLocaleString()}</small><div class="status" style="margin-top:9px">${esc(o.status)} · payment ${esc(o.payment_status)}</div></div>`).join('')}
 function admin(){
   const pending=state.adminTopups.filter(t=>t.status==='pending');
