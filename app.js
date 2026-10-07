@@ -55,6 +55,27 @@ function setQty(q){document.getElementById('quantity').value=q;calc()}
 async function placeOrder(){const platform=document.getElementById('platform').value,service=document.getElementById('service').value,quantity=Number(document.getElementById('quantity').value),social_link=document.getElementById('link').value.trim(),msg=document.getElementById('orderMsg');if(!social_link||quantity<1){msg.innerHTML='<p class="error">Enter a valid link and quantity.</p>';return}const total=Math.round(rates[service]*quantity/1000);const {error}=await sb.from('boost_orders').insert({user_id:state.profile.id,platform,service,social_link,quantity,total_amount_ngn:total});if(error){msg.innerHTML=`<p class="error">${esc(error.message)}</p>`;return}msg.innerHTML=`<div class="status good" style="margin-top:12px">Order submitted — Awaiting verification. Pay ${money(total)} to OPay 9165647651 and keep your receipt.</div>`;await loadOrders();setTimeout(render,800)}
 function ordersHtml(rows){if(!rows.length)return '<div class="empty">No orders yet.</div>';return rows.map(o=>`<div class="order"><div class="orderhead"><b>#${esc(o.id)} · ${esc(o.platform)} ${esc(serviceName[o.service]||o.service)}</b><b>${money(o.total_amount_ngn)}</b></div><small>${esc(o.social_link)} · Qty ${Number(o.quantity).toLocaleString()}</small><div class="status" style="margin-top:9px">${esc(o.status)} · payment ${esc(o.payment_status)}</div></div>`).join('')}
 function admin(){return shell(`<section class="hero"><small>ADMIN CONTROL PANEL</small><h2>Manage Boost Hub.</h2><p>Review orders, verify payments and manage customer wallet balances.</p></section><div class="admin-grid"><section class="card"><div class="title"><div class="num">01</div><div><h3>Customers</h3><p>Current registered accounts.</p></div></div>${state.customers.map(c=>`<div class="customer"><div><b>${esc(c.display_name)}</b><br><small>${esc(c.email)}</small></div><div><b>${money(state.walletBalances[c.id]||0)}</b><br><button type="button" class="tab admin-action" data-action="credit" data-id="${c.id}" data-name="${esc(c.display_name)}">Add balance</button></div></div>`).join('')}</section><section class="card"><div class="title"><div class="num">02</div><div><h3>Orders</h3><p>Verify or reject customer payments.</p></div></div>${state.adminOrders.length?state.adminOrders.map(o=>`<div class="order"><div class="orderhead"><b>#${o.id} · ${esc(o.platform)}</b><b>${money(o.total_amount_ngn)}</b></div><small>User ${o.user_id} · ${esc(o.service)} · Qty ${Number(o.quantity).toLocaleString()}</small><p style="font-size:12px;word-break:break-all">${esc(o.social_link)}</p><div style="display:flex;gap:7px;flex-wrap:wrap"><button type="button" class="tab admin-action" data-action="verify" data-id="${o.id}">Verify payment</button><button type="button" class="tab admin-action" data-action="reject" data-id="${o.id}">Reject</button><button type="button" class="tab admin-action" data-action="complete" data-id="${o.id}">Complete</button></div></div>`).join(''):'<div class="empty">No orders.</div>'}</section></div>`)}
+async function approveTopup(id){
+  const{error}=await sb.rpc('approve_wallet_topup',{p_topup_id:id});
+  if(error){
+    alert(error.message);
+  }else{
+    alert('Wallet funding approved.');
+    await loadOrders();
+    render();
+  }
+}
+
+async function rejectTopup(id){
+  const{error}=await sb.rpc('reject_wallet_topup',{p_topup_id:id});
+  if(error){
+    alert(error.message);
+  }else{
+    alert('Wallet funding rejected.');
+    await loadOrders();
+    render();
+  }
+}
 async function addCredit(uid,name){const raw=prompt(`Enter wallet amount for ${name}. Use a positive number to add credit or a negative number to deduct.`);if(raw===null)return;const amount=Number(raw);if(!Number.isFinite(amount)||amount===0)return alert('Enter a valid amount.');const {error}=await sb.from('wallet_transactions').insert({user_id:uid,amount_ngn:Math.round(amount),transaction_type:amount>0?'admin_credit':'admin_debit',reference:'Admin adjustment'});if(error)alert(error.message);else{alert('Balance updated.');await loadOrders();render()}}
 async function updateOrder(id,status,payment_status){const {error}=await sb.from('boost_orders').update({status,payment_status}).eq('id',id);if(error)alert(error.message);else{await loadOrders();render()}}
 document.addEventListener('click',async e=>{const b=e.target.closest('.admin-action');if(!b)return;const action=b.dataset.action,id=Number(b.dataset.id);if(action==='credit'){addCredit(id,b.dataset.name);return}if(action==='verify')updateOrder(id,'verified','verified');if(action==='reject')updateOrder(id,'cancelled','rejected');if(action==='complete')updateOrder(id,'completed','verified')});
