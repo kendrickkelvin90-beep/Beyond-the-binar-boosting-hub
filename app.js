@@ -247,6 +247,29 @@ function ordersHtml(rows){
     </div>
   `).join('');
 }
+async function refreshProviderStatus(orderId){
+  const msg=document.getElementById('orderMsg');
+
+  const{data,error}=await sb.functions.invoke('smm-provider',{
+    body:{
+      action:'status',
+      order_id:Number(orderId)
+    }
+  });
+
+  if(error){
+    if(msg)msg.innerHTML=`<p class="error">${esc(error.message)}</p>`;
+    return;
+  }
+
+  if(!data?.ok){
+    if(msg)msg.innerHTML=`<p class="error">${esc(data?.error||'Could not refresh the provider status.')}</p>`;
+    return;
+  }
+
+  await loadOrders();
+  render();
+}
 function admin(){
   const pending=state.adminTopups.filter(t=>t.status==='pending');
 
