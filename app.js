@@ -52,7 +52,42 @@ function home(){return shell(`<section class="hero"><small>SOCIAL PROMOTION</sma
 function orderForm(){return `<div class="grid"><section class="card"><div class="title"><div class="num">01</div><div><h3>Build your order</h3><p>Tell us exactly where and what to deliver.</p></div></div><label>Social platform</label><select id="platform"><option>Instagram</option><option>TikTok</option><option>Facebook</option><option>Telegram</option><option>X</option></select><label>Service</label><select id="service" onchange="calc()"><option value="followers">Followers — ₦4,500 / 1,000</option><option value="likes">Likes — ₦800 / 1,000</option><option value="views">Views — ₦1,200 / 1,000</option></select><label>Social media link *</label><input id="link" type="url" required placeholder="https://instagram.com/yourprofile"><label>Quantity *</label><input id="quantity" type="number" min="1" step="1" value="1000" oninput="calc()"><div class="quick">${[500,1000,2500,5000].map(q=>`<button type="button" onclick="setQty(${q})">${q.toLocaleString()}</button>`).join('')}</div><p class="hint" style="margin-top:8px">Enter the exact number you want.</p><div class="total"><div><small>ORDER TOTAL</small><strong id="total">₦4,500</strong></div><button class="btn" onclick="placeOrder()">Continue</button></div><div id="orderMsg"></div></section><aside class="card"><div class="title"><div class="num">02</div><div><h3>Pay with OPay</h3><p>Use the account below for your order.</p></div></div><div class="payment"><small>OPAY ACCOUNT</small><strong>9165647651</strong><span>Justice Trust Ugoala</span></div><button class="btn secondary" onclick="navigator.clipboard?.writeText('9165647651')">Copy account number</button><div class="notice" style="margin-top:12px">After payment, your order remains <b>Awaiting verification</b> until payment is confirmed.</div></aside></div>`}
 function calc(){const q=Number(document.getElementById('quantity')?.value||0),s=document.getElementById('service')?.value||'followers';const el=document.getElementById('total');if(el)el.textContent=money(Math.round(rates[s]*q/1000))}
 function setQty(q){document.getElementById('quantity').value=q;calc()}
-async function placeOrder(){const platform=document.getElementById('platform').value,service=document.getElementById('service').value,quantity=Number(document.getElementById('quantity').value),social_link=document.getElementById('link').value.trim(),msg=document.getElementById('orderMsg');if(!social_link||quantity<1){msg.innerHTML='<p class="error">Enter a valid link and quantity.</p>';return}const total=Math.round(rates[service]*quantity/1000);const {error}=await sb.from('boost_orders').insert({user_id:state.profile.id,platform,service,social_link,quantity,total_amount_ngn:total});if(error){msg.innerHTML=`<p class="error">${esc(error.message)}</p>`;return}msg.innerHTML=`<div class="status good" style="margin-top:12px">Order submitted — Awaiting verification. Pay ${money(total)} to OPay 9165647651 and keep your receipt.</div>`;await loadOrders();setTimeout(render,800)}
+async function placeOrder(){
+  const platform=document.getElementById('platform').value;
+  const service=document.getElementById('service').value;
+  const quantity=Number(document.getElementById('quantity').value);
+  const social_link=document.getElementById('link').value.trim();
+  const msg=document.getElementById('orderMsg');
+
+  if(!social_link||quantity<1){
+    msg.innerHTML='<p class="error">Enter a valid link and quantity.</p>';
+    return;
+  }
+
+  const total=Math.round(rates[service]*quantity/1000);
+
+  if(total>state.balance){
+    msg.innerHTML=`<p class="error">Insufficient wallet balance. You need ${money(total)} and your balance is ${money(state.balance)}. Fund your wallet first.</p>`;
+    return;
+  }
+
+  const{data,error}=await sb.rpc('place_wallet_boost',{
+    p_platform:platform,
+    p_service:service,
+    p_social_link:social_link,
+    p_quantity:quantity
+  });
+
+  if(error){
+    msg.innerHTML=`<p class="error">${esc(error.message)}</p>`;
+    return;
+  }
+
+  msg.innerHTML=`<div class="status good" style="margin-top:12px">Order #${esc(data)} submitted successfully. ${money(total)} has been deducted from your wallet.</div>`;
+
+  await loadOrders();
+  setTimeout(render,800);
+}
 function ordersHtml(rows){if(!rows.length)return '<div class="empty">No orders yet.</div>';return rows.map(o=>`<div class="order"><div class="orderhead"><b>#${esc(o.id)} · ${esc(o.platform)} ${esc(serviceName[o.service]||o.service)}</b><b>${money(o.total_amount_ngn)}</b></div><small>${esc(o.social_link)} · Qty ${Number(o.quantity).toLocaleString()}</small><div class="status" style="margin-top:9px">${esc(o.status)} · payment ${esc(o.payment_status)}</div></div>`).join('')}
 function admin(){
   const pending=state.adminTopups.filter(t=>t.status==='pending');
