@@ -6,6 +6,34 @@ const serviceName={followers:'Followers',likes:'Likes',views:'Views'};
 let state={session:null,profile:null,orders:[],balance:0,topups:[],customers:[],adminOrders:[],adminTopups:[],walletBalances:{},providerServices:[],view:'home'};
 const app=document.getElementById('app');
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+async function loadProviderServices(){
+  if(!state.session)return;
+
+  const{data,error}=await sb.functions.invoke('smm-provider',{
+    body:{action:'catalog'}
+  });
+
+  if(error){
+    console.warn('Provider catalog error:',error);
+    state.providerServices=[];
+    return;
+  }
+
+  const rows=[];
+
+  Object.entries(data?.data||{}).forEach(([platform,list])=>{
+    (Array.isArray(list)?list:[]).forEach(s=>{
+      rows.push({
+        ...s,
+        platform:String(platform).toLowerCase()
+      });
+    });
+  });
+
+  state.providerServices=rows
+    .filter(s=>Number(s.service)>0&&Number(s.rate)>0&&Number(s.min)>=1)
+    .sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+}
 const money=n=>'₦'+Number(n||0).toLocaleString();
 function shell(content){return `<div class="wrap"><header class="top"><div class="brand"><div class="mark">BTB</div><div><div class="eyebrow">BEYOND THE BINARY</div><h1>BOOST HUB</h1></div></div><div>${state.session?`<button class="pill" onclick="logout()">Sign out</button>`:`<button class="pill" onclick="showAuth('login')">Sign in</button>`}</div></header>${content}<footer>BEYOND THE BINARY MEDIA • BOOST HUB</footer></div>`}
 function authForm(mode){const login=mode==='login';return shell(`<section class="card auth"><div class="title"><div class="num">${login?'01':'00'}</div><div><h3>${login?'Welcome back':'Create your account'}</h3><p>${login?'Sign in to manage your boost orders.':'Register once to place and track orders.'}</p></div></div><form onsubmit="submitAuth(event,'${mode}')">${!login?'<label>Display name</label><input id="name" required placeholder="Your name">':''}<label>Email</label><input id="email" type="email" required placeholder="you@example.com"><label>Password</label><div class="password-wrap"><input id="password" type="password" minlength="6" required placeholder="At least 6 characters"><button type="button" class="password-toggle" onclick="const p=document.getElementById('password');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'👁️':'🙈'">👁️</button></div>${login?'<button type="button" class="tab" style="margin:10px 0" onclick="forgotPassword()">Forgot password?</button>':''}<button class="btn" type="submit">${login?'Sign in':'Create account'}</button></form><div id="authmsg"></div><p class="hint" style="margin-top:14px">${login?'New here?':'Already have an account?'} <button class="tab" onclick="showAuth('${login?'register':'login'}')">${login?'Create account':'Sign in'}</button></p></section>`) }
