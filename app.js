@@ -216,7 +216,37 @@ async function placeOrder(){
 
   
 
-function ordersHtml(rows){if(!rows.length)return '<div class="empty">No orders yet.</div>';return rows.map(o=>`<div class="order"><div class="orderhead"><b>#${esc(o.id)} · ${esc(o.platform)} ${esc(serviceName[o.service]||o.service)}</b><b>${money(o.total_amount_ngn)}</b></div><small>${esc(o.social_link)} · Qty ${Number(o.quantity).toLocaleString()}</small><div class="status" style="margin-top:9px">${esc(o.status)} · payment ${esc(o.payment_status)}</div></div>`).join('')}
+function ordersHtml(rows){
+  if(!rows.length)return '<div class="empty">No orders yet.</div>';
+
+  return rows.map(o=>`
+    <div class="order">
+      <div class="orderhead">
+        <b>#${esc(o.id)} · ${esc(o.platform)} ${esc(o.service)}</b>
+        <b>${money(o.total_amount_ngn)}</b>
+      </div>
+
+      <small>${esc(o.social_link)} · Qty ${Number(o.quantity).toLocaleString()}</small>
+
+      <div class="status" style="margin-top:9px">
+        ${esc(o.status)} · payment ${esc(o.payment_status)}
+      </div>
+
+      ${o.provider_order_id?`
+        <small style="display:block;margin-top:8px">
+          Provider order: <b>#${esc(o.provider_order_id)}</b>
+        </small>
+        <div class="status" style="margin-top:6px">
+          Provider: ${esc(o.provider_status||'Pending')}
+          ${o.provider_remains!=null?` · Remaining: ${Number(o.provider_remains).toLocaleString()}`:''}
+        </div>
+        <button class="btn secondary" style="margin-top:8px" onclick="refreshProviderStatus(${Number(o.id)})">
+          Refresh delivery status
+        </button>
+      `:''}
+    </div>
+  `).join('');
+}
 function admin(){
   const pending=state.adminTopups.filter(t=>t.status==='pending');
 
