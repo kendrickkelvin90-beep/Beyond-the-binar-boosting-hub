@@ -431,7 +431,42 @@ async function rejectTopup(id){
 }
 async function addCredit(uid,name){const raw=prompt(`Enter wallet amount for ${name}. Use a positive number to add credit or a negative number to deduct.`);if(raw===null)return;const amount=Number(raw);if(!Number.isFinite(amount)||amount===0)return alert('Enter a valid amount.');const {error}=await sb.from('wallet_transactions').insert({user_id:uid,amount_ngn:Math.round(amount),transaction_type:amount>0?'admin_credit':'admin_debit',reference:'Admin adjustment'});if(error)alert(error.message);else{alert('Balance updated.');await loadOrders();render()}}
 async function updateOrder(id,status,payment_status){const {error}=await sb.from('boost_orders').update({status,payment_status}).eq('id',id);if(error)alert(error.message);else{await loadOrders();render()}}
-document.addEventListener('click',async e=>{const b=e.target.closest('.admin-action');if(!b)return;const action=b.dataset.action,id=Number(b.dataset.id);if(action==='credit'){addCredit(id,b.dataset.name);return}if(action==='verify')updateOrder(id,'verified','verified');if(action==='reject')updateOrder(id,'cancelled','rejected');if(action==='complete')updateOrder(id,'completed','verified')});
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('.admin-action');
+  if(!b)return;
+
+  const action=b.dataset.action;
+  const id=Number(b.dataset.id);
+
+  if(action==='credit'){
+    addCredit(id,b.dataset.name);
+    return;
+  }
+
+  if(action==='approve-topup'){
+    await approveTopup(id);
+    return;
+  }
+
+  if(action==='reject-topup'){
+    await rejectTopup(id);
+    return;
+  }
+
+  if(action==='verify'){
+    updateOrder(id,'verified','verified');
+    return;
+  }
+
+  if(action==='reject'){
+    updateOrder(id,'cancelled','rejected');
+    return;
+  }
+
+  if(action==='complete'){
+    updateOrder(id,'completed','verified');
+  }
+});
 async function logout(){await sb.auth.signOut();await refresh()}
 
 function render(){if(!state.session){if(app.dataset.auth==='1')return;app.innerHTML=home();return}app.dataset.auth='0';app.innerHTML=state.profile?.role==='admin'?admin():home();}
