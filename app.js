@@ -289,6 +289,9 @@ function calc(){
 }
 function setQty(q){document.getElementById('quantity').value=q;calc()}
 async function placeOrder(){
+  await loadOrders();
+
+  const platform=document.getElementById('platform')?.value||'';
   const platform=document.getElementById('platform')?.value||'';
   const providerServiceId=Number(document.getElementById('service')?.value||0);
   const quantity=Number(document.getElementById('quantity')?.value||0);
