@@ -508,6 +508,10 @@ function orderForm(){
           `<option value="${esc(s.service)}">${esc(s.name)} — ₦${Number(s.rate).toLocaleString()} / 1,000</option>`
         ).join('')}
       </select>
+        ${services.map(s=>
+          `<option value="${esc(s.service)}">${esc(s.name)} — ₦${Number(s.rate).toLocaleString()} / 1,000</option>`
+        ).join('')}
+      </select>
 
       <label>Social media link *</label>
 
