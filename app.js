@@ -372,9 +372,13 @@ function render(){
   }
 
   if(state.view==='boost'){
-    app.innerHTML=boostPage();
-    return;
+  app.innerHTML=boostPage();
+  updateServiceInfo();
+  return;
   }
+
+    
+
 
   if(state.view==='dashboard'){
     app.innerHTML=dashboardPage();
