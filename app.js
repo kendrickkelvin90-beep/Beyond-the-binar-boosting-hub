@@ -89,18 +89,49 @@ function providerOptionsForPlatform(p){
   return state.providerServices.filter(s=>s.platform===p);
 }
 
-function updateProviderServices(){
-  const platform=document.getElementById('platform');
-  const service=document.getElementById('service');
-  if(!platform||!service)return;
+function providerServiceSearch(){
+  return String(document.getElementById('serviceSearch')?.value||'').trim().toLowerCase();
+}
 
-  const services=providerOptionsForPlatform(platform.value);
+function filteredProviderServices(){
+  const platform=document.getElementById('platform')?.value||'';
+  const search=providerServiceSearch();
+
+  return providerOptionsForPlatform(platform).filter(s=>{
+    if(!search)return true;
+
+    const text=[
+      s.name,
+      s.service,
+      s.platform,
+      s.category,
+      s.description,
+      s.type
+    ].filter(Boolean).join(' ').toLowerCase();
+
+    return text.includes(search);
+  });
+}
+
+function renderProviderServiceOptions(){
+  const service=document.getElementById('service');
+  if(!service)return;
+
+  const services=filteredProviderServices();
 
   service.innerHTML=services.map(s=>
     `<option value="${esc(s.service)}">${esc(s.name)} — ₦${Number(s.rate).toLocaleString()} / 1,000</option>`
   ).join('');
 
+  if(services.length){
+    service.value=String(services[0].service);
+  }
+
   calc();
+}
+
+function updateProviderServices(){
+  renderProviderServiceOptions();
 }
 
 function orderForm(){
@@ -108,8 +139,138 @@ function orderForm(){
   const firstPlatform=platforms[0]||'instagram';
   const services=providerOptionsForPlatform(firstPlatform);
 
-  return `<div class="grid"><section class="card"><div class="title"><div class="num">01</div><div><h3>Build your order</h3><p>Tell us exactly where and what to deliver.</p></div></div><label>Social platform</label><select id="platform" onchange="updateProviderServices()">${platforms.map(p=>`<option value="${esc(p)}">${platformLabel(p)}</option>`).join('')}</select><label>Service</label><select id="service" onchange="calc()">${services.map(s=>`<option value="${esc(s.service)}">${esc(s.name)} — ₦${Number(s.rate).toLocaleString()} / 1,000</option>`).join('')}</select><label>Social media link *</label><input id="link" type="url" required placeholder="https://instagram.com/yourprofile"><label>Quantity *</label><input id="quantity" type="number" min="${Number(services[0]?.min||1)}" max="${Number(services[0]?.max||0)}" step="1" value="${Number(services[0]?.min||1000)}" oninput="calc()"><div class="quick">${[500,1000,2500,5000].map(q=>`<button type="button" onclick="setQty(${q})">${q.toLocaleString()}</button>`).join('')}</div><p class="hint" style="margin-top:8px">Enter the exact number you want.</p><div class="total"><div><small>ORDER TOTAL</small><strong id="total">₦0</strong></div><button class="btn" onclick="placeOrder()">Continue</button></div><div id="orderMsg"></div></section><aside class="card"><div class="title"><div class="num">02</div><div><h3>Pay with OPay</h3><p>Use your wallet balance for your order.</p></div></div><div class="payment"><small>OPAY ACCOUNT</small><strong>9165647651</strong><span>Justice Trust Ugoala</span></div><button class="btn secondary" onclick="navigator.clipboard?.writeText('9165647651')">Copy account number</button><div class="notice" style="margin-top:12px">Fund your wallet first. Your wallet is charged when the provider accepts the order.</div></aside></div>`;
-}
+  return `<div class="grid">
+    <section class="card">
+      <div class="title">
+        <div class="num">01</div>
+        <div>
+          <h3>Build your order</h3>
+          <p>Tell us exactly where and what to deliver.</p>
+        </div>
+      </div>
+
+      <label>Social platform</label>
+
+      <select id="platform" onchange="updateProviderServices()">
+        ${platforms.map(p=>
+          `<option value="${esc(p)}">${platformLabel(p)}</option>`
+        ).join('')}
+      </select>
+
+      <label>Search services</label>
+
+      <input
+        id="serviceSearch"
+        type="search"
+        placeholder="Search followers, likes, views, comments, reactions..."
+        oninput="renderProviderServiceOptions()"
+      >
+
+      <p class="hint">
+        Search for any service available on the selected platform.
+      </p>
+
+      <label>Service</label>
+
+      <select id="service" onchange="calc()">
+        ${services.map(s=>
+          `<option value="${esc(s.service)}">${esc(s.name)} — ₦${Number(s.rate).toLocaleString()} / 1,000</option>`
+        ).join('')}
+      </select>
+
+      <label>Social media link *</label>
+
+      <input
+        id="link"
+        type="url"
+        required
+        placeholder="https://instagram.com/yourprofile"
+      >
+
+      <label>Quantity *</label>
+
+      <input
+        id="quantity"
+        type="number"
+        min="${Number(services[0]?.min||1)}"
+        max="${Number(services[0]?.max||0)}"
+        step="1"
+        value="${Number(services[0]?.min||1000)}"
+        oninput="calc()"
+      >
+
+      <div class="quick">
+        ${[500,1000,2500,5000].map(q=>
+          `<button type="button" onclick="setQty(${q})">${q.toLocaleString()}</button>`
+        ).join('')}
+      </div>
+
+      <p class="hint" style="margin-top:8px">
+        Enter the exact number you want.
+      </p>
+
+      <div class="total">
+        <div>
+          <small>ORDER TOTAL</small>
+          <strong id="total">₦0</strong>
+        </div>
+
+        <button class="btn" onclick="placeOrder()">Continue</button>
+      </div>
+
+      <div id="orderMsg"></div>
+    </section>
+
+    <aside class="card">
+      <div class="title">
+        <div class="num">02</div>
+        <div>
+          <h3>Pay with OPay</h3>
+          <p>Use your wallet balance for your order.</p>
+        </div>
+      </div>
+
+      <div class="payment">
+        <small>OPAY ACCOUNT</small>
+        <strong>9165647651</strong>
+        <span>Justice Trust Ugoala</span>
+      </div>
+
+      <button
+        class="btn secondary"
+        onclick="navigator.clipboard?.writeText('9165647651')"
+      >
+        Copy account number
+      </button>
+
+      <div class="notice" style="margin-top:12px">
+        Fund your wallet first. Your wallet is charged when the provider accepts the order.
+      </div>
+    </aside>
+  </div>`;
+                            }
+
+
+
+  
+  
+  
+
+  
+
+  
+    
+  
+
+
+
+
+
+  
+
+
+  
+
 function calc(){
   const q=Number(document.getElementById('quantity')?.value||0);
   const id=Number(document.getElementById('service')?.value||0);
