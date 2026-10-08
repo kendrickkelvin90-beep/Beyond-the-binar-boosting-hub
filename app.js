@@ -39,7 +39,39 @@ function shell(content){return `<div class="wrap"><header class="top"><div class
 function authForm(mode){const login=mode==='login';return shell(`<section class="card auth"><div class="title"><div class="num">${login?'01':'00'}</div><div><h3>${login?'Welcome back':'Create your account'}</h3><p>${login?'Sign in to manage your boost orders.':'Register once to place and track orders.'}</p></div></div><form onsubmit="submitAuth(event,'${mode}')">${!login?'<label>Display name</label><input id="name" required placeholder="Your name">':''}<label>Email</label><input id="email" type="email" required placeholder="you@example.com"><label>Password</label><div class="password-wrap"><input id="password" type="password" minlength="6" required placeholder="At least 6 characters"><button type="button" class="password-toggle" onclick="const p=document.getElementById('password');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'👁️':'🙈'">👁️</button></div>${login?'<button type="button" class="tab" style="margin:10px 0" onclick="forgotPassword()">Forgot password?</button>':''}<button class="btn" type="submit">${login?'Sign in':'Create account'}</button></form><div id="authmsg"></div><p class="hint" style="margin-top:14px">${login?'New here?':'Already have an account?'} <button class="tab" onclick="showAuth('${login?'register':'login'}')">${login?'Create account':'Sign in'}</button></p></section>`) }
 function showAuth(mode){app.innerHTML=authForm(mode)} async function forgotPassword(){const email=document.getElementById('email')?.value?.trim()||'';const msg=document.getElementById('authmsg');if(!email){msg.innerHTML='<p class="error">Enter your email address first, then tap Forgot password.</p>';return}try{const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin});if(error)throw error;msg.innerHTML='<p class="status">Password reset email sent. Check your email and follow the link to create a new password.</p>'}catch(x){msg.innerHTML=`<p class="error">${esc(x.message)}</p>`}}
 async function submitAuth(e,mode){e.preventDefault();const msg=document.getElementById('authmsg');msg.innerHTML='';try{const emailEl=document.getElementById('email');const passwordEl=document.getElementById('password');const nameEl=document.getElementById('name');const emailValue=emailEl?.value?.trim()||'';const passwordValue=passwordEl?.value||'';const displayName=nameEl?.value?.trim()||'';let r;if(mode==='login')r=await sb.auth.signInWithPassword({email:emailValue,password:passwordValue});else r=await sb.auth.signUp({email:emailValue,password:passwordValue,options:{data:{display_name:displayName}}});if(r.error)throw r.error;if(mode==='register'&&!r.data.session){msg.innerHTML='<p class="status">Account created. Check your email to confirm, then sign in.</p>';return}await refresh();}catch(x){msg.innerHTML=`<p class="error">${esc(x.message)}</p>`}}
-async function refresh(){const {data:{session}}=await sb.auth.getSession();state.session=session;state.profile=null;if(session){let p=await sb.from('users').select('*').eq('auth_user_id',session.user.id).single();if(p.error)console.warn(p.error);state.profile=p.data||null;await loadOrders();await loadProviderServices();}render()}
+async function refresh(){
+  const {data:{session}}=await sb.auth.getSession();
+
+  state.session=session;
+  state.profile=null;
+
+  // Show the page immediately instead of waiting for all data.
+  render();
+
+  if(!session)return;
+
+  // Load the user's profile.
+  const p=await sb
+    .from('users')
+    .select('*')
+    .eq('auth_user_id',session.user.id)
+    .single();
+
+  if(p.error)console.warn(p.error);
+
+  state.profile=p.data||null;
+
+  // Render immediately after the profile is available.
+  render();
+
+  // Load orders and provider services in the background.
+  Promise.all([
+    loadOrders(),
+    loadProviderServices()
+  ]).then(()=>{
+    render();
+  });
+}
 async function loadOrders(){if(!state.profile)return;const [o,w,t]=await Promise.all([sb.from('boost_orders').select('*').eq('user_id',state.profile.id).order('created_at',{ascending:false}),sb.from('wallet_transactions').select('amount_ngn').eq('user_id',state.profile.id),sb.from('wallet_topups').select('*').eq('user_id',state.profile.id).order('created_at',{ascending:false})]);state.orders=o.data||[];state.balance=(w.data||[]).reduce((a,x)=>a+Number(x.amount_ngn||0),0);state.topups=t.data||[];if(state.profile.role==='admin')await loadAdmin()}
 async function loadAdmin(){const [u,o,w,t]=await Promise.all([sb.from('users').select('*').order('created_at',{ascending:false}),sb.from('boost_orders').select('*').order('created_at',{ascending:false}),sb.from('wallet_transactions').select('user_id,amount_ngn'),sb.from('wallet_topups').select('*').order('created_at',{ascending:false})]);state.customers=u.data||[];state.adminOrders=o.data||[];state.adminTopups=t.data||[];state.walletBalances={};(w.data||[]).forEach(x=>{state.walletBalances[x.user_id]=(state.walletBalances[x.user_id]||0)+Number(x.amount_ngn||0)})}
 function topupHtml(rows){if(!rows.length)return '<div class="empty">No wallet funding requests yet.</div>';return rows.map(t=>`<div class="order"><div class="orderhead"><b>Top-up #${esc(t.id)}</b><b>${money(t.amount_ngn)}</b></div><small>Reference: ${esc(t.payment_reference||'Not provided')}</small><div class="status" style="margin-top:9px">${esc(t.status)}</div></div>`).join('')}
