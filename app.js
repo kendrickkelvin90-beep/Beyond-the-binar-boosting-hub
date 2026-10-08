@@ -238,12 +238,73 @@ function dashboardPage(){
   `);
 }
 
+function startDashboardAutoRefresh(){
+  if(statusTimer)clearInterval(statusTimer);
+  statusTimer=null;
+
+  if(!state.session||state.view!=='dashboard')return;
+
+  statusTimer=setInterval(async()=>{
+    if(document.visibilityState!=='visible')return;
+
+    const active=state.orders.filter(o=>
+      o.provider_order_id &&
+      ['processing','awaiting_verification'].includes(String(o.status))
+    );
+
+    if(!active.length)return;
+
+    await Promise.all(
+      active.map(o=>
+        sb.functions.invoke('smm-provider',{
+          body:{
+            action:'status',
+            order_id:Number(o.id)
+          }
+        })
+      )
+    );
+
+    await loadOrders();
+    render();
+  },30000);
+}
+
 function render(){
+  if(statusTimer)clearInterval(statusTimer);
+  statusTimer=null;
+
   if(!state.session){
     state.view='home';
     app.innerHTML=home();
     return;
   }
+
+  app.dataset.auth='0';
+
+  if(state.profile?.role==='admin'){
+    app.innerHTML=admin();
+    return;
+  }
+
+  if(state.view==='boost'){
+    app.innerHTML=boostPage();
+    return;
+  }
+
+  if(state.view==='dashboard'){
+    app.innerHTML=dashboardPage();
+    startDashboardAutoRefresh();
+    return;
+  }
+
+  app.innerHTML=home();
+}
+  
+    
+  
+    
+
 
   app.dataset.auth='0';
 
