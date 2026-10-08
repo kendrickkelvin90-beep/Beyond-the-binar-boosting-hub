@@ -338,24 +338,23 @@ function render(){
     
 
 
-  app.dataset.auth='0';
+  
 
-  if(state.profile?.role==='admin'){
-    app.innerHTML=admin();
-    return;
-  }
+  
+  
+    
+  
 
   if(state.view==='boost'){
-    app.innerHTML=boostPage();
-    return;
-  }
+    
+    
+  
 
-  if(state.view==='dashboard'){
-    app.innerHTML=dashboardPage();
-    return;
-  }
+  
+    
+  
 
-  app.innerHTML=home();
+
 }
 function platformLabel(p){
   return p==='x'||p==='twitter'?'X':p.charAt(0).toUpperCase()+p.slice(1);
