@@ -820,5 +820,5 @@ document.addEventListener('click',async e=>{
 });
 async function logout(){await sb.auth.signOut();await refresh()}
 
-function render(){if(!state.session){if(app.dataset.auth==='1')return;app.innerHTML=home();return}app.dataset.auth='0';app.innerHTML=state.profile?.role==='admin'?admin():home();}
+
 sb.auth.onAuthStateChange(()=>setTimeout(refresh,0));refresh();
