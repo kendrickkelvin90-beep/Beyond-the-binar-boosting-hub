@@ -503,15 +503,23 @@ function orderForm(){
 
       <label>Service</label>
 
-      <select id="service" onchange="calc()">
-        ${services.map(s=>
-          `<option value="${esc(s.service)}">${esc(s.name)} — ₦${Number(s.rate).toLocaleString()} / 1,000</option>`
-        ).join('')}
-      </select>
-        ${services.map(s=>
-          `<option value="${esc(s.service)}">${esc(s.name)} — ₦${Number(s.rate).toLocaleString()} / 1,000</option>`
-        ).join('')}
-      </select>
+    <select id="service" onchange="updateServiceInfo();calc()">
+  ${services.map(s=>
+    `<option value="${esc(s.service)}">${esc(s.name)} — ₦${Number(s.rate).toLocaleString()} / 1,000</option>`
+  ).join('')}
+</select>
+
+<div id="serviceInfo" class="notice" style="margin-top:12px">
+  Select a service to see its details before continuing.
+</div>
+      
+          
+        
+      
+        
+          
+        
+    
 
       <label>Social media link *</label>
 
