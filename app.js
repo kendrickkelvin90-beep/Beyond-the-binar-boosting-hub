@@ -279,10 +279,14 @@ function dashboardPage(){
     </div>
 
     <section class="hero">
-      <small>MY DASHBOARD</small>
-      <h2>Welcome to your dashboard.</h2>
-      <p>Manage your wallet and boost orders from one place.</p>
-    </section>
+  <small>MY DASHBOARD</small>
+  <h2>Welcome back, ${esc(state.profile?.display_name||state.session?.user?.user_metadata?.display_name||'User')}! 👋</h2>
+  <p>Manage your wallet and boost orders from one place.</p>
+</section>
+    
+      
+      
+    
 
     <section class="card">
       <div class="title">
