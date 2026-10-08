@@ -567,37 +567,124 @@ async function placeOrder(){
 
   
 
-function ordersHtml(rows){
-  if(!rows.length)return '<div class="empty">No orders yet.</div>';
+function orderProgress(o){
+  const original=Math.max(0,Number(o.quantity||0));
+  const remaining=o.provider_remains!=null?Math.max(0,Number(o.provider_remains)):null;
+  const delivered=remaining!=null
+    ?Math.min(original,Math.max(0,original-remaining))
+    :null;
 
-  return rows.map(o=>`
-    <div class="order">
-      <div class="orderhead">
-        <b>#${esc(o.id)} · ${esc(o.platform)} ${esc(o.service)}</b>
-        <b>${money(o.total_amount_ngn)}</b>
-      </div>
-
-      <small>${esc(o.social_link)} · Qty ${Number(o.quantity).toLocaleString()}</small>
-
-      <div class="status" style="margin-top:9px">
-        ${esc(o.status)} · payment ${esc(o.payment_status)}
-      </div>
-
-      ${o.provider_order_id?`
-        <small style="display:block;margin-top:8px">
-          Provider order: <b>#${esc(o.provider_order_id)}</b>
-        </small>
-        <div class="status" style="margin-top:6px">
-          Provider: ${esc(o.provider_status||'Pending')}
-          ${o.provider_remains!=null?` · Remaining: ${Number(o.provider_remains).toLocaleString()}`:''}
-        </div>
-        <button class="btn secondary" style="margin-top:8px" onclick="refreshProviderStatus(${Number(o.id)})">
-          Refresh delivery status
-        </button>
-      `:''}
-    </div>
-  `).join('');
+  return {original,remaining,delivered};
 }
+
+function ordersHtml(rows){
+  if(!rows.length){
+    return '<div class="empty">No orders yet.</div>';
+  }
+
+  return rows.map(o=>{
+    const p=orderProgress(o);
+    const completed=o.status==='completed'||p.remaining===0;
+
+    return `
+      <details class="order">
+        <summary style="cursor:pointer;list-style:none">
+          <div class="orderhead">
+            <b>#${esc(o.id)} · ${esc(o.platform)} ${esc(o.service)}</b>
+            <b>${money(o.total_amount_ngn)}</b>
+          </div>
+
+          <div style="margin-top:8px">
+            <small>
+              ${p.remaining!=null
+                ?`Delivery: ${p.delivered.toLocaleString()} / ${p.original.toLocaleString()} · Remaining: ${p.remaining.toLocaleString()}`
+                :`Quantity: ${p.original.toLocaleString()}`
+              }
+            </small>
+          </div>
+
+          <div class="status" style="margin-top:9px">
+            ${esc(o.provider_status||o.status||'Pending')}
+            ${completed?' · Completed':''}
+          </div>
+        </summary>
+
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">
+          <div><b>Order ID:</b> #${esc(o.id)}</div>
+          <div><b>Platform:</b> ${esc(o.platform)}</div>
+          <div><b>Service:</b> ${esc(o.service)}</div>
+          <div><b>Original quantity:</b> ${p.original.toLocaleString()}</div>
+          <div><b>Delivered:</b> ${p.delivered!=null?p.delivered.toLocaleString():'Not available yet'}</div>
+          <div><b>Remaining:</b> ${p.remaining!=null?p.remaining.toLocaleString():'Not available yet'}</div>
+          <div><b>Order status:</b> ${esc(o.status)}</div>
+          <div><b>Payment:</b> ${esc(o.payment_status)}</div>
+          <div><b>Amount paid:</b> ${money(o.total_amount_ngn)}</div>
+
+          <div>
+            <b>Social link:</b>
+            <span style="word-break:break-all">${esc(o.social_link)}</span>
+          </div>
+
+          <div>
+            <b>Created:</b>
+            ${o.created_at?esc(new Date(o.created_at).toLocaleString()):'—'}
+          </div>
+
+          ${o.provider_order_id?`
+            <div><b>Provider order:</b> #${esc(o.provider_order_id)}</div>
+
+            ${o.provider_start_count!=null
+              ?`<div><b>Provider start count:</b> ${Number(o.provider_start_count).toLocaleString()}</div>`
+              :''
+            }
+
+            ${o.provider_charge_ngn!=null
+              ?`<div><b>Provider charge:</b> ${money(o.provider_charge_ngn)}</div>`
+              :''
+            }
+
+            <button
+              class="btn secondary"
+              style="margin-top:12px"
+              onclick="event.preventDefault();event.stopPropagation();refreshProviderStatus(${Number(o.id)})">
+              Refresh delivery status
+            </button>
+          `:''}
+        </div>
+      </details>
+    `;
+  }).join('');
+              }
+  
+
+  
+    
+      
+        
+        
+    
+
+      
+
+      
+        
+      
+
+      
+        
+          
+        
+        
+          
+          
+        
+        
+          
+        
+      
+    
+
+
 async function refreshProviderStatus(orderId){
   const msg=document.getElementById('orderMsg');
 
