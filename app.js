@@ -76,7 +76,194 @@ async function submitTopup(){
   await loadOrders();
   setTimeout(render,700);
 }
-function home(){return shell(`<section class="hero"><small>SOCIAL PROMOTION</small><h2>Grow your social presence.<br><em>One order at a time.</em></h2><p>Choose your platform, paste the exact link, set your quantity and submit your order.</p></section>${!state.session?`<section class="card"><div class="title"><div class="num">00</div><div><h3>Account required</h3><p>Create an account or sign in before placing a boost order.</p></div></div><button class="btn" onclick="showAuth('register')">Create account</button> <button class="btn secondary" onclick="showAuth('login')">Log in</button></section>`:`${orderForm()}${walletCard()}<section class="card history"><div class="title"><div class="num">04</div><div><h3>Order history</h3><p>Orders paid from your wallet.</p></div></div>${ordersHtml(state.orders)}</section>`}`)}
+function home(){
+  const services=[...new Set(
+    state.providerServices
+      .map(s=>String(s.name||'').trim())
+      .filter(Boolean)
+  )].slice(0,30);
+
+  return shell(`
+    <section class="hero" style="text-align:center">
+      <small>BEYOND THE BINARY</small>
+      <h2>BOOST HUB</h2>
+      <p>Grow your social media presence with fast and reliable promotion services.</p>
+
+      <button
+        class="btn"
+        style="background:linear-gradient(135deg,#d6a21d,#f0c75e);color:#14213d;font-size:18px;font-weight:800;padding:16px 30px;margin-top:18px"
+        onclick="state.view='boost';render()">
+        🚀 BOOST ACCOUNT
+      </button>
+    </section>
+
+    <section class="card">
+      <div class="title">
+        <div class="num">01</div>
+        <div>
+          <h3>Available Services</h3>
+          <p>Choose a service when you're ready to boost your account.</p>
+        </div>
+      </div>
+
+      ${
+        services.length
+        ? `<div class="service-list">
+            ${services.map(s=>`
+              <div class="order">
+                <b>${esc(s)}</b>
+              </div>
+            `).join('')}
+          </div>`
+        : `
+          <div class="order">
+            <b>Instagram Followers</b>
+          </div>
+          <div class="order">
+            <b>Instagram Likes</b>
+          </div>
+          <div class="order">
+            <b>Instagram Views</b>
+          </div>
+          <div class="order">
+            <b>TikTok Followers</b>
+          </div>
+          <div class="order">
+            <b>Facebook Likes</b>
+          </div>
+          <div class="order">
+            <b>Telegram Members</b>
+          </div>
+          <div class="order">
+            <b>X Followers</b>
+          </div>
+        `
+      }
+    </section>
+
+    <section class="card">
+      <div class="title">
+        <div class="num">02</div>
+        <div>
+          <h3>Dashboard</h3>
+          <p>Manage your wallet, orders and account.</p>
+        </div>
+      </div>
+
+      ${
+        state.session
+        ? `
+          <button class="btn secondary" onclick="state.view='dashboard';render()">
+            📊 Open Dashboard
+          </button>
+        `
+        : `
+          <button class="btn" onclick="showAuth('register')">
+            Create Account
+          </button>
+          <button class="btn secondary" onclick="showAuth('login')">
+            Sign In
+          </button>
+        `
+      }
+    </section>
+  `);
+}
+
+function boostPage(){
+  return shell(`
+    <div style="margin-bottom:15px">
+      <button class="tab" onclick="state.view='home';render()">← Back Home</button>
+    </div>
+
+    <section class="hero">
+      <small>BOOST ACCOUNT</small>
+      <h2>Choose your service and place your order.</h2>
+      <p>Select a platform, service, quantity and social media link.</p>
+    </section>
+
+    ${state.session ? orderForm() : `
+      <section class="card">
+        <h3>Sign in required</h3>
+        <p class="hint">Create an account or sign in before placing a boost.</p>
+        <button class="btn" onclick="showAuth('login')">Sign In</button>
+      </section>
+    `}
+  `);
+}
+
+function dashboardPage(){
+  return shell(`
+    <div style="margin-bottom:15px">
+      <button class="tab" onclick="state.view='home';render()">← Back Home</button>
+    </div>
+
+    <section class="hero">
+      <small>MY DASHBOARD</small>
+      <h2>Welcome to your dashboard.</h2>
+      <p>Manage your wallet and boost orders from one place.</p>
+    </section>
+
+    <section class="card">
+      <div class="title">
+        <div class="num">01</div>
+        <div>
+          <h3>Wallet Balance</h3>
+          <p>Available balance</p>
+        </div>
+      </div>
+
+      <strong style="font-size:30px">${money(state.balance)}</strong>
+
+      <div style="margin-top:15px">
+        <button class="btn" onclick="state.view='boost';render()">
+          🚀 Boost Account
+        </button>
+      </div>
+    </section>
+
+    ${walletCard()}
+
+    <section class="card history">
+      <div class="title">
+        <div class="num">04</div>
+        <div>
+          <h3>My Orders</h3>
+          <p>Track your boost orders.</p>
+        </div>
+      </div>
+
+      ${ordersHtml(state.orders)}
+    </section>
+  `);
+}
+
+function render(){
+  if(!state.session){
+    state.view='home';
+    app.innerHTML=home();
+    return;
+  }
+
+  app.dataset.auth='0';
+
+  if(state.profile?.role==='admin'){
+    app.innerHTML=admin();
+    return;
+  }
+
+  if(state.view==='boost'){
+    app.innerHTML=boostPage();
+    return;
+  }
+
+  if(state.view==='dashboard'){
+    app.innerHTML=dashboardPage();
+    return;
+  }
+
+  app.innerHTML=home();
+}
 function platformLabel(p){
   return p==='x'||p==='twitter'?'X':p.charAt(0).toUpperCase()+p.slice(1);
 }
