@@ -463,7 +463,9 @@ function renderProviderServiceOptions(){
 
 function updateProviderServices(){
   renderProviderServiceOptions();
+  updateServiceInfo();
 }
+
 function updateServiceInfo(){
   const el=document.getElementById('serviceInfo');
   const id=Number(document.getElementById('service')?.value||0);
