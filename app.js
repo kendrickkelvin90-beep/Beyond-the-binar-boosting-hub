@@ -464,7 +464,32 @@ function renderProviderServiceOptions(){
 function updateProviderServices(){
   renderProviderServiceOptions();
 }
+function updateServiceInfo(){
+  const el=document.getElementById('serviceInfo');
+  const id=Number(document.getElementById('service')?.value||0);
+  const s=state.providerServices.find(x=>Number(x.service)===id);
 
+  if(!el||!s)return;
+
+  const details=[];
+
+  if(s.type)details.push(`<div>👤 <strong>Type:</strong> ${esc(s.type)}</div>`);
+  if(s.category)details.push(`<div>📂 <strong>Category:</strong> ${esc(s.category)}</div>`);
+  if(s.min||s.max){
+    details.push(`<div>📦 <strong>Order limit:</strong> ${Number(s.min||0).toLocaleString()} – ${Number(s.max||0).toLocaleString()}</div>`);
+  }
+  if(s.description)details.push(`<div>📋 <strong>Description:</strong> ${esc(s.description)}</div>`);
+
+  el.innerHTML=`
+    <div style="font-weight:800;margin-bottom:8px">📋 Service Information</div>
+    <div style="display:grid;gap:7px">
+      ${details.join('')||`<div>${esc(s.name||'Service details unavailable.')}</div>`}
+    </div>
+    <div style="margin-top:10px;font-size:13px">
+      Please read the service details carefully before continuing with your order.
+    </div>
+  `;
+}
 function orderForm(){
   const platforms=providerPlatforms();
   const firstPlatform=platforms[0]||'instagram';
