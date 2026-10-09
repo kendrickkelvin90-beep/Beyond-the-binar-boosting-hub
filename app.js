@@ -510,8 +510,10 @@ function renderProviderServiceOptions(){
     service.value=String(services[0].service);
   }
 
-  calc();
+    updateServiceInfo();
+  renderQuantityPackages();
 }
+
 
 function updateProviderServices(){
   renderProviderServiceOptions();
