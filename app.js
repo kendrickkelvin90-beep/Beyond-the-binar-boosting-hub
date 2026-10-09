@@ -613,7 +613,15 @@ ${services.map(s=>
         placeholder="https://instagram.com/yourprofile"
       >
 
-      <label>Quantity *</label>
+            <label>Package *</label>
+
+      <select id="quantity" onchange="calc()">
+        <option value="">Choose a package</option>
+      </select>
+
+      <p class="hint" style="margin-top:8px">
+        Select a package to see its price. Maximum displayed package: 1,000.
+      </p>
 
       <input
         id="quantity"
