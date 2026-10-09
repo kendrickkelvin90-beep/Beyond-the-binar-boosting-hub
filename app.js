@@ -1,7 +1,49 @@
 const SUPABASE_URL='https://jpnwqoghmxpheotlstxx.supabase.co';
 const SUPABASE_KEY='sb_publishable_2rqvTatoYZmq85T5RDUiAA_3cbMW1Rm';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const rates={followers:4500,likes:800,views:1200};
+const rates = {
+  followers: 15000,
+  likes: 8000,
+  views: 2500
+};
+
+const fixedPrices = {
+  followers: {
+    100: 1500,
+    500: 5000,
+    1000: 9000
+  },
+  likes: {
+    100: 800,
+    500: 3000,
+    1000: 6000
+  },
+  views: {
+    100: 200,
+    500: 800,
+    1000: 2500
+  }
+};
+
+function getFixedPrice(serviceType, quantity) {
+  const prices = fixedPrices[String(serviceType).toLowerCase()];
+  if (!prices) return null;
+
+  const qty = Number(quantity);
+  if (!Number.isFinite(qty) || qty <= 0) return null;
+
+  const tiers = Object.keys(prices)
+    .map(Number)
+    .sort((a, b) => a - b);
+
+  let tier = tiers[0];
+  for (const t of tiers) {
+    if (qty >= t) tier = t;
+    else break;
+  }
+
+  return Math.ceil(prices[tier] * qty / tier);
+}
 const serviceName={followers:'Followers',likes:'Likes',views:'Views'};
 let state={session:null,profile:null,orders:[],balance:0,topups:[],customers:[],adminOrders:[],adminTopups:[],walletBalances:{},providerServices:[],view:'home'};
 let statusTimer=null;
