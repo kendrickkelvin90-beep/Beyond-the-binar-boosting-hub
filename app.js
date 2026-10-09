@@ -24,7 +24,13 @@ const fixedPrices = {
     1000: 2500
   }
 };
-
+function priceTypeForName(name){
+  const n=String(name||'').toLowerCase();
+  if(/followers?|subscribers?/.test(n))return 'followers';
+  if(/views?/.test(n))return 'views';
+  if(/likes?/.test(n)&&!/comments?|reactions?/.test(n))return 'likes';
+  return null;
+}
 function getFixedPrice(serviceType, quantity) {
   const prices = fixedPrices[String(serviceType).toLowerCase()];
   if (!prices) return null;
