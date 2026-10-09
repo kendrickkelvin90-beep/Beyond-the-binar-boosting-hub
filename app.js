@@ -705,7 +705,11 @@ function calc(){
 
   if(!el||!s)return;
 
-  el.textContent=money(Math.ceil((Number(s.rate)*q/1000)*1.5));
+  
+const type=priceTypeForName(s.name);
+const fixed=getFixedPrice(type,q);
+el.textContent=money(fixed!==null?fixed:Math.ceil((Number(s.rate)*q/1000)*1.5));
+
 
   const input=document.getElementById('quantity');
   if(input){
