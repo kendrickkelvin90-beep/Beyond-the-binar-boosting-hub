@@ -734,7 +734,9 @@ async function placeOrder(){
     return;
   }
 
-  const total=Math.ceil((Number(selected.rate)*quantity/1000)*1.5);
+  const type=priceTypeForName(selected.name);
+const fixed=getFixedPrice(type,quantity);
+const total=fixed!==null?fixed:Math.ceil((Number(selected.rate)*quantity/1000)*1.5);
 
   if(total>state.balance){
     msg.innerHTML=`<p class="error">Insufficient wallet balance. You need ${money(total)} and your balance is ${money(state.balance)}. Fund your wallet first.</p>`;
