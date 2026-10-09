@@ -577,9 +577,13 @@ function orderForm(){
       <label>Service</label>
 
     <select id="service" onchange="updateServiceInfo();calc()">
-  ${services.map(s=>
-    `<option value="${esc(s.service)}">${esc(s.name)} — ₦${Number(s.rate).toLocaleString()} / 1,000</option>`
-  ).join('')}
+    
+${services.map(s=>
+  `<option value="${esc(s.service)}">${esc(s.name)}</option>`
+).join('')}
+
+    
+  
 </select>
 
 <div id="serviceInfo" class="notice" style="margin-top:12px">
