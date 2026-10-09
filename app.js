@@ -14,16 +14,28 @@ const fixedPrices = {
     1000: 9000
   },
   likes: {
-    100: 800,
-    500: 3000,
-    1000: 6000
+    100: 130
   },
   views: {
-    100: 200,
-    500: 800,
-    1000: 2500
+    100: 80
   }
 };
+  
+    
+    
+    
+  
+  
+    
+    
+    
+  
+  
+    
+    
+    
+  
+
 function priceTypeForName(name){
   const n=String(name||'').toLowerCase();
   if(/followers?|subscribers?/.test(n))return 'followers';
