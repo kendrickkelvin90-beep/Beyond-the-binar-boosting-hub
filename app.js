@@ -582,7 +582,7 @@ function orderForm(){
 
       <label>Service</label>
 
-    <select id="service" onchange="updateServiceInfo();calc()">
+    <select id="service" onchange="updateServiceInfo();renderQuantityPackages()">
     
 ${services.map(s=>
   `<option value="${esc(s.service)}">${esc(s.name)}</option>`
