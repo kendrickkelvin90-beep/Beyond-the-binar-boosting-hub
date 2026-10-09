@@ -738,7 +738,7 @@ function renderQuantityPackages(){
 
   const min = Number(selected.min || 1);
   const max = Number(selected.max || 0);
-  const tiers = Array.from({length: 10}, (_, i) => (i + 1) * 100).filter(
+  const tiers = Array.from({length: 19}, (_, i) => 100 + i * 50).filter(
     q => q >= min && (max <= 0 || q <= max)
   );
 
