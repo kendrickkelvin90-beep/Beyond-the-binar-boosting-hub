@@ -705,27 +705,78 @@ ${services.map(s=>
 
   
 
-function calc(){
-  const q=Number(document.getElementById('quantity')?.value||0);
-  const id=Number(document.getElementById('service')?.value||0);
-  const s=state.providerServices.find(x=>Number(x.service)===id);
-  const el=document.getElementById('total');
+function packagePrice(service, quantity){
+  const type = priceTypeForName(service?.name);
+  const fixed = getFixedPrice(type, quantity);
+  return fixed !== null
+    ? fixed
+    : Math.ceil((Number(service?.rate || 0) * quantity / 1000) * 1.5);
+}
 
-  if(!el||!s)return;
+function renderQuantityPackages(){
+  const input = document.getElementById('quantity');
+  const serviceId = Number(document.getElementById('service')?.value || 0);
+  const selected = state.providerServices.find(
+    s => Number(s.service) === serviceId
+  );
+
+  if (!input || !selected) return;
+
+  const min = Number(selected.min || 1);
+  const max = Number(selected.max || 0);
+  const tiers = [100, 500, 1000].filter(
+    q => q >= min && (max <= 0 || q <= max)
+  );
+
+  input.innerHTML = tiers.length
+    ? tiers.map(q => {
+        const type = priceTypeForName(selected.name);
+        const label = type
+          ? type.charAt(0).toUpperCase() + type.slice(1)
+          : 'Units';
+
+        return `<option value="${q}">${q.toLocaleString()} ${label} — ${money(packagePrice(selected, q))}</option>`;
+      }).join('')
+    : '<option value="">No standard package available for this service</option>';
+
+  if (tiers.length) input.value = String(tiers[0]);
+  calc();
+}
+
+function calc(){
+  const quantity = Number(document.getElementById('quantity')?.value || 0);
+  const serviceId = Number(document.getElementById('service')?.value || 0);
+  const selected = state.providerServices.find(
+    s => Number(s.service) === serviceId
+  );
+  const total = document.getElementById('total');
+
+  if (!total) return;
+
+  total.textContent = selected && quantity
+    ? money(packagePrice(selected, quantity))
+    : '₦0';
+}
+  
+  
+  
+  
 
   
-const type=priceTypeForName(s.name);
-const fixed=getFixedPrice(type,q);
-el.textContent=money(fixed!==null?fixed:Math.ceil((Number(s.rate)*q/1000)*1.5));
+
+  
 
 
-  const input=document.getElementById('quantity');
-  if(input){
-    input.min=Number(s.min||1);
-    input.max=Number(s.max||0);
-  }
-}
-function setQty(q){document.getElementById('quantity').value=q;calc()}
+
+
+
+  
+  
+    
+    
+  
+
+
 async function placeOrder(){
   await loadOrders();
 
