@@ -1202,11 +1202,25 @@ async function approveTopup(id){
   if(error){
     alert(error.message);
   }else{
-    alert('Wallet funding approved.');
+    const emailResult = await sb.functions.invoke('send-email', {
+      body: { action: 'wallet_topup', topup_id: Number(id) }
+    });
+    alert(emailResult.error || !emailResult.data?.ok
+      ? 'Wallet funding approved, but the receipt email could not be sent. Check email settings.'
+      : 'Wallet funding approved and receipt email sent.');
     await loadOrders();
     render();
   }
 }
+  
+  
+    
+  
+    
+    
+    
+  
+
 
 async function rejectTopup(id){
   const{error}=await sb.rpc('reject_wallet_topup',{p_topup_id:id});
