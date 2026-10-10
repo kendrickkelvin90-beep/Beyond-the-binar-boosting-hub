@@ -879,9 +879,15 @@ const total=fixed!==null?fixed:Math.ceil((Number(selected.rate)*quantity/1000)*1
     return;
   }
 
-  await loadOrders();
+    await loadOrders();
 
-  msg.innerHTML=`<div class="status good" style="margin-top:12px">Order #${esc(data.order_id)} submitted successfully. Provider order #${esc(data.provider_order_id)}. ${money(data.total_ngn)} was deducted from your wallet.</div>`;
+  const emailResult = await sb.functions.invoke('send-email', {
+    body: { action: 'boost_order', order_id: Number(data.order_id) }
+  });
+
+  msg.innerHTML=`<div class="status good" style="margin-top:12px">Order #${esc(data.order_id)} submitted successfully. Provider order #${esc(data.provider_order_id)}. ${money(data.total_ngn)} was deducted from your wallet.${emailResult.error || !emailResult.data?.ok ? '<p class="hint">Your order is confirmed, but the email receipt could not be sent. Please check your email settings.</p>' : '<p class="hint">Confirmation email sent.</p>'}</div>`;
+
+  
 }
   
   
