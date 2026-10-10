@@ -1247,6 +1247,35 @@ document.addEventListener('click',async e=>{
 
   const action=b.dataset.action;
   const id=Number(b.dataset.id);
+  if(action==='test-email'){
+  b.disabled=true;
+  b.textContent='Sending test email...';
+
+  try{
+    const {data,error}=await sb.functions.invoke('send-email',{
+      body:{action:'test_email'}
+    });
+
+    if(error || !data?.ok){
+      alert(
+        'Test email failed: '+
+        (data?.error || error?.message || 'Unknown error')+
+        (data?.missing?.length
+          ? '\nMissing configuration: '+data.missing.join(', ')
+          : '')
+      );
+    }else{
+      alert('Test email accepted by Resend. Check the admin email inbox and spam folder.');
+    }
+  }catch(err){
+    alert('Test email failed: '+(err?.message || 'Unexpected error'));
+  }finally{
+    b.disabled=false;
+    b.textContent='Send test email to admin';
+  }
+
+  return;
+  }
 
   if(action==='credit'){
     addCredit(id,b.dataset.name);
