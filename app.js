@@ -1073,6 +1073,7 @@ function admin(){
       <small>ADMIN CONTROL PANEL</small>
       <h2>Manage Boost Hub.</h2>
       <p>Review wallet funding, orders and customer balances.</p>
+      <button type="button" class="admin-action" data-action="test-email">Send test email to admin</button>
     </section>
 
     <div class="admin-grid">
