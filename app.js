@@ -517,18 +517,39 @@ function providerOptionsForPlatform(p){
   return state.providerServices.filter(s=>s.platform===p);
 }
 
+
 function providerServiceSearch(){
-  return String(document.getElementById('serviceSearch')?.value||'').trim().toLowerCase();
+  return String(
+    document.getElementById('serviceSearch')?.value || ''
+  ).trim().toLowerCase();
+}
+
+function getServiceCategory(service){
+  const text = [
+    service.name,
+    service.service,
+    service.type,
+    service.category,
+    service.description
+  ].filter(Boolean).join(' ').toLowerCase();
+
+  if (/followers?|subscribers?|members?/.test(text)) return 'followers';
+  if (/likes?|reactions?/.test(text)) return 'likes';
+  if (/views?|watch time|impressions?/.test(text)) return 'views';
+  if (/comments?|replies?/.test(text)) return 'comments';
+  if (/shares?|reposts?|retweets?/.test(text)) return 'shares';
+  if (/saves?|bookmarks?/.test(text)) return 'saves';
+
+  return 'other';
 }
 
 function filteredProviderServices(){
-  const platform=document.getElementById('platform')?.value||'';
-  const search=providerServiceSearch();
+  const platform = document.getElementById('platform')?.value || '';
+  const search = providerServiceSearch();
+  const category = document.getElementById('serviceTypeFilter')?.value || '';
 
-  return providerOptionsForPlatform(platform).filter(s=>{
-    if(!search)return true;
-
-    const text=[
+  return providerOptionsForPlatform(platform).filter(s => {
+    const text = [
       s.name,
       s.service,
       s.platform,
@@ -537,9 +558,11 @@ function filteredProviderServices(){
       s.type
     ].filter(Boolean).join(' ').toLowerCase();
 
-    return text.includes(search);
+    return (!search || text.includes(search)) &&
+      (!category || getServiceCategory(s) === category);
   });
 }
+
 
 function renderProviderServiceOptions(){
   const service=document.getElementById('service');
