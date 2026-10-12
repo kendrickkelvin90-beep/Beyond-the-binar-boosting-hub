@@ -706,21 +706,11 @@ ${services.map(s=>
        Choose from the available packages up to this service's provider-approved maximum.
       </p>
 
-      <input
-        id="quantity"
-        type="number"
-        min="${Number(services[0]?.min||1)}"
-        max="${Number(services[0]?.max||0)}"
-        step="1"
-        value="${Number(services[0]?.min||1000)}"
-        oninput="calc()"
-      >
-
-      <div class="quick">
-        ${[500,1000,2500,5000].map(q=>
-          `<button type="button" onclick="setQty(${q})">${q.toLocaleString()}</button>`
-        ).join('')}
-      </div>
+      <p class="hint">
+    Select a package from the quantity dropdown above.
+  </p>
+        
+    
 
       <p class="hint" style="margin-top:8px">
         Enter the exact number you want.
