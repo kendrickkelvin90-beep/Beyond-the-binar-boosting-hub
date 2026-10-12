@@ -771,9 +771,19 @@ function renderQuantityPackages(){
 
   const min = Number(selected.min || 1);
   const max = Number(selected.max || 0);
-  const tiers = Array.from({length: 19}, (_, i) => 100 + i * 50).filter(
-    q => q >= min && (max <= 0 || q <= max)
-  );
+  const packageSizes = [
+  min,
+  100, 150, 200, 250, 300, 400, 500, 750,
+  1000, 1500, 2000, 2500, 3000, 4000, 5000,
+  7500, 10000, 15000, 20000, 25000,
+  50000, 75000, 100000
+];
+
+const tiers = [...new Set(packageSizes)]
+  .filter(q => Number.isFinite(q) && q >= min && (max <= 0 || q <= max))
+  .sort((a, b) => a - b);
+    
+
 
   input.innerHTML = tiers.length
     ? tiers.map(q => {
