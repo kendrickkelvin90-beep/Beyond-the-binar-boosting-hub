@@ -359,6 +359,88 @@ function boostPage(){
 }
 
 function dashboardPage(){
+  
+let foreignCatalogData = null;
+
+async function loadForeignCatalog(kind) {
+  const output = document.getElementById('foreignCatalogOutput');
+  if (!output) return;
+
+  output.innerHTML = '<p class="hint">Loading live catalog...</p>';
+
+  try {
+    const { data, error } = await sb.functions.invoke('fleexa-catalog', {
+      body: { action: kind }
+    });
+
+    if (error) throw error;
+    if (!data || data.ok !== true) {
+      throw new Error(data?.error || 'Catalog could not be loaded.');
+    }
+
+    foreignCatalogData = data.data;
+
+    output.innerHTML =
+      '<pre style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px">' +
+      esc(JSON.stringify(data.data, null, 2)) +
+      '</pre>';
+  } catch (err) {
+    output.innerHTML =
+      '<p class="error">' +
+      esc(err.message || 'Catalog request failed.') +
+      '</p>';
+  }
+}
+
+function foreignNumbersPage() {
+  return shell(`
+    <div style="margin-bottom:15px">
+      <button class="tab" onclick="state.view='home';render()">
+        ← Back Home
+      </button>
+    </div>
+
+    <section class="hero">
+      <small>INTERNATIONAL SERVICES</small>
+      <h2>Foreign Numbers & OTP</h2>
+      <p>Explore supported countries, SMS services, rental options and temporary email.</p>
+    </section>
+
+    <section class="card">
+      <h3>Choose a catalog</h3>
+      <p class="hint">Load available options from Fleexa.</p>
+
+      <button class="btn" onclick="loadForeignCatalog('countries')">
+        🌍 SMS Countries
+      </button>
+
+      <button class="btn secondary" onclick="loadForeignCatalog('sms_services')">
+        📱 SMS Services
+      </button>
+
+      <button class="btn secondary" onclick="loadForeignCatalog('sms5_products')">
+        🔢 SMS5 Products
+      </button>
+
+      <button class="btn secondary" onclick="loadForeignCatalog('sms5_apps')">
+        📲 SMS5 Apps
+      </button>
+
+      <button class="btn secondary" onclick="loadForeignCatalog('sms5_countries')">
+        🗺️ SMS5 Countries
+      </button>
+
+      <button class="btn secondary" onclick="loadForeignCatalog('email_products')">
+        ✉️ Temporary Email
+      </button>
+
+      <div id="foreignCatalogOutput" class="order" style="margin-top:14px">
+        Choose a catalog above to load available options.
+      </div>
+    </section>
+  `);
+}
+
   return shell(`
     <div style="margin-bottom:15px">
       <button class="tab" onclick="state.view='home';render()">← Back Home</button>
