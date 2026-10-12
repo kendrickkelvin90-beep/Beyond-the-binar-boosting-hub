@@ -885,7 +885,23 @@ const total=fixed!==null?fixed:Math.ceil((Number(selected.rate)*quantity/1000)*1
     return;
   }
 
-  msg.innerHTML='<p class="status">Submitting your order to the provider...</p>';
+  const confirmed = confirm(
+  `Confirm your order:\n\n` +
+  `Platform: ${platform}\n` +
+  `Service: ${selected.name}\n` +
+  `Quantity: ${quantity.toLocaleString()}\n` +
+  `Total: ${money(total)}\n\n` +
+  `Tap OK to place this paid order.`
+);
+
+if (!confirmed) {
+  msg.innerHTML =
+    '<p class="status">Order cancelled. Your wallet has not been charged.</p>';
+  return;
+}
+
+msg.innerHTML =
+  '<p class="status">Submitting your order to the provider...</p>';
 
   const{data,error}=await sb.functions.invoke('smm-provider',{
     body:{
