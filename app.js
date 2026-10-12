@@ -652,13 +652,29 @@ function orderForm(){
         </div>
       </div>
 
-      <label>Social platform</label>
+      <label>Choose a platform</label>
 
-      <select id="platform" onchange="updateProviderServices()">
-        ${platforms.map(p=>
-          `<option value="${esc(p)}">${platformLabel(p)}</option>`
-        ).join('')}
-      </select>
+<div class="platform-grid" role="group" aria-label="Choose social platform">
+  ${platforms.map(p=>`
+    <button type="button"
+      class="platform-choice"
+      data-platform="${esc(p)}"
+      aria-pressed="${p===firstPlatform?'true':'false'}"
+      onclick="choosePlatform('${esc(p)}')">
+      <span class="platform-icon platform-${esc(p)}">${esc(platformIcon(p))}</span>
+      <span class="platform-name">${esc(platformLabel(p))}</span>
+    </button>
+  `).join('')}
+</div>
+
+<label for="platform">Selected platform</label>
+
+<select id="platform" onchange="choosePlatform(this.value)">
+  ${platforms.map(p=>`
+    <option value="${esc(p)}">${esc(platformLabel(p))}</option>
+  `).join('')}
+</select>
+      
 
       <label>Search services</label>
 
