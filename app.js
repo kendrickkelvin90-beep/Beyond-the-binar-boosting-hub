@@ -550,6 +550,10 @@ function render(){
     
 
 
+  if (state.view === 'foreign') {
+  app.innerHTML = foreignNumbersPage();
+  return;
+  }  
   if(state.view==='dashboard'){
     app.innerHTML=dashboardPage();
     startDashboardAutoRefresh();
