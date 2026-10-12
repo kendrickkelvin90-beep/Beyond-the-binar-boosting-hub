@@ -667,7 +667,7 @@ ${services.map(s=>
       </select>
 
       <p class="hint" style="margin-top:8px">
-        Select a package to see its price. Maximum displayed package: 1,000.
+       Choose from the available packages up to this service's provider-approved maximum.
       </p>
 
       <input
