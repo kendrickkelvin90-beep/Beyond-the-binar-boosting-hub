@@ -360,7 +360,7 @@ function boostPage(){
 
 function dashboardPage(){
   
-}
+
 
   return shell(`
     <div style="margin-bottom:15px">
