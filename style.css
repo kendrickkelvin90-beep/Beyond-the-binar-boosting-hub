@@ -447,3 +447,82 @@ footer{
     border-radius:17px;
   }
 }
+/* Boost Account platform picker */
+.platform-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 10px 0 16px;
+}
+
+.platform-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 90px;
+  padding: 12px 6px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.platform-choice.active {
+  border: 2px solid var(--accent);
+  background: #eaf1ff;
+  box-shadow: 0 5px 16px rgba(21, 94, 239, .12);
+}
+
+.platform-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: #202124;
+  color: #fff;
+  font-size: 25px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.platform-instagram {
+  background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+}
+
+.platform-tiktok { background: #111; color: #25f4ee; }
+.platform-facebook { background: #1877f2; }
+.platform-telegram { background: #229ed9; }
+.platform-youtube { background: #ff0033; }
+.platform-x, .platform-twitter { background: #111; }
+.platform-whatsapp { background: #25d366; }
+.platform-snapchat { background: #fffc00; color: #111; }
+.platform-linkedin { background: #0a66c2; }
+.platform-pinterest { background: #bd081c; }
+.platform-threads { background: #111; }
+.platform-discord { background: #5865f2; }
+.platform-spotify { background: #1db954; color: #111; }
+.platform-twitch { background: #9146ff; }
+.platform-reddit { background: #ff4500; }
+
+.platform-name {
+  font-size: 12px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 360px) {
+  .platform-grid {
+    gap: 7px;
+  }
+
+  .platform-choice {
+    min-height: 82px;
+    padding: 9px 4px;
+  }
+}
+
