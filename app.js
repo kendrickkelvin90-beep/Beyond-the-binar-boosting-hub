@@ -54,28 +54,14 @@ function getFixedPrice(serviceType, quantity) {
     .map(Number)
     .sort((a, b) => a - b);
 
-  if (tiers.length === 1) {
-    return Math.ceil(prices[tiers[0]] * qty / tiers[0]);
+  let tier = tiers[0];
+
+  for (const t of tiers) {
+    if (qty >= t) tier = t;
+    else break;
   }
 
-  if (qty <= tiers[0]) {
-    return Math.ceil(prices[tiers[0]] * qty / tiers[0]);
-  }
-
-  for (let i = 1; i < tiers.length; i++) {
-    const low = tiers[i - 1];
-    const high = tiers[i];
-
-    if (qty <= high) {
-      const price = prices[low] +
-        (prices[high] - prices[low]) * (qty - low) / (high - low);
-
-      return Math.ceil(price);
-    }
-  }
-
-  const last = tiers[tiers.length - 1];
-  return Math.ceil(prices[last] * qty / last);
+  return Math.ceil(prices[tier] * qty / tier);
 }
   
   
