@@ -499,6 +499,43 @@ function providerPlatforms(){
   return [...new Set(state.providerServices.map(s=>s.platform))];
 }
 
+function platformIcon(p){
+  const icons={
+    instagram:'◎',
+    tiktok:'♪',
+    facebook:'f',
+    telegram:'➤',
+    youtube:'▶',
+    twitter:'𝕏',
+    x:'𝕏',
+    whatsapp:'◉',
+    snapchat:'👻',
+    linkedin:'in',
+    pinterest:'P',
+    threads:'@',
+    discord:'◉',
+    spotify:'♫',
+    twitch:'▣',
+    reddit:'●'
+  };
+  return icons[String(p||'').toLowerCase()]||'✦';
+}
+
+function choosePlatform(p){
+  const select=document.getElementById('platform');
+  if(!select)return;
+  select.value=p;
+  updateProviderServices();
+
+  document.querySelectorAll('.platform-choice').forEach(button=>{
+    const active=button.dataset.platform===p;
+    button.classList.toggle('active',active);
+    button.setAttribute('aria-pressed',active?'true':'false');
+  });
+}
+  
+
+
 function providerOptionsForPlatform(p){
   return state.providerServices.filter(s=>s.platform===p);
 }
