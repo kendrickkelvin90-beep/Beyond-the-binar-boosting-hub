@@ -649,6 +649,19 @@ function orderForm(){
       <p class="hint">
         Search for any service available on the selected platform.
       </p>
+      
+<label>Service type</label>
+
+<select id="serviceTypeFilter" onchange="renderProviderServiceOptions()">
+  <option value="">All service types</option>
+  <option value="followers">Followers & Members</option>
+  <option value="likes">Likes & Reactions</option>
+  <option value="views">Views & Watch Time</option>
+  <option value="comments">Comments & Replies</option>
+  <option value="shares">Shares & Reposts</option>
+  <option value="saves">Saves & Bookmarks</option>
+  <option value="other">Other Services</option>
+</select>
 
       <label>Service</label>
 
