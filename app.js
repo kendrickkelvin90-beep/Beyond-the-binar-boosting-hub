@@ -432,10 +432,44 @@ async function loadForeignCatalog(kind) {
 
     foreignCatalogData = data.data;
 
-    output.innerHTML =
-      '<pre style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px">' +
-      esc(JSON.stringify(data.data, null, 2)) +
-      '</pre>';
+const raw = data.data;
+const rows = Array.isArray(raw)
+  ? raw
+  : Array.isArray(raw?.data)
+    ? raw.data
+    : Array.isArray(raw?.products)
+      ? raw.products
+      : Array.isArray(raw?.services)
+        ? raw.services
+        : [];
+
+if (!rows.length) {
+  output.innerHTML =
+    '<p class="hint">No number or product options were returned for this category. Try another catalog.</p>';
+  return;
+}
+
+output.innerHTML = rows.map(item => {
+  const name = item.name || item.service ||
+    item.product || item.title || item.id || 'Service option';
+
+  const price = item.price_ngn ??
+    item.api_rate_ngn ?? item.price ?? item.api_rate_usd;
+
+  const quantity = item.quantity ?? item.stock;
+
+  return `
+    <div class="order" style="margin:10px 0;padding:12px">
+      <strong>${esc(name)}</strong>
+      <p class="hint">Price: ${
+        price == null ? 'Not provided' : esc(price)
+      }</p>
+      <p class="hint">Available quantity: ${
+        quantity == null ? 'Not reported' : esc(quantity)
+      }</p>
+    </div>
+  `;
+}).join('');
   } catch (err) {
     output.innerHTML =
       '<p class="error">' +
