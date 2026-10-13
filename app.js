@@ -2085,47 +2085,97 @@ async function saveAccountListing(e) {
 
   const form = e.target;
   const data = Object.fromEntries(new FormData(form).entries());
-
+  const button = form.querySelector('button[type="submit"]');
   const price = Number(data.price_ngn);
+
+  if (!data.platform || !data.title?.trim()) {
+    alert("Choose a platform and enter an account title.");
+    return;
+  }
 
   if (!Number.isFinite(price) || price <= 0) {
     alert("Enter a price greater than ₦0.");
     return;
   }
 
-  const listing = {
-    platform: data.platform || "Other",
-    category: data.category || "General",
-    title: data.title || "Account listing",
-    description: data.description || "",
-    price_ngn: price,
-    creation_year: data.year_created
-      ? Number(data.year_created)
-      : null,
-    follower_count: data.followers_count
-      ? Number(data.followers_count)
-      : null,
-    region: data.region || "",
-    features: data.features || "",
-    image_url: data.image_url || "",
-    status: data.status === "sold" ? "sold" : "available",
-    updated_at: new Date().toISOString()
-  };
-
-  const { error } = await sb
-    .from("accounts_catalog")
-    .insert(listing);
-
-  if (error) {
-    alert("Could not save listing: " + error.message);
-    return;
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Saving listing...";
   }
 
-  form.reset();
-  alert("Account listing saved successfully!");
-  await loadAdmin();
-  render();
-}
+  try {
+    let imageUrl = "";
+    const file = form.querySelector(
+      'input[name="account_image"]'
+    )?.files?.[0];
+
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        throw new Error("Choose an image file.");
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("Image must be 5 MB or smaller.");
+      }
+
+      const safeName = file.name.replace(
+        /[^a-zA-Z0-9._-]/g, "_"
+      );
+      const path = Date.now() + "-" + safeName;
+
+      const { error: uploadError } = await sb.storage
+        .from("account-images")
+        .upload(path, file, {
+          upsert: false,
+          contentType: file.type
+        });
+
+      if (uploadError) throw uploadError;
+
+      imageUrl = sb.storage
+        .from("account-images")
+        .getPublicUrl(path).data.publicUrl;
+    }
+
+    const listing = {
+      platform: data.platform || "Other",
+      category: data.category || "General",
+      title: data.title.trim(),
+      description: data.description || "",
+      price_ngn: price,
+      creation_year: data.year_created
+        ? Number(data.year_created) : null,
+      follower_count: data.followers_count
+        ? Number(data.followers_count) : null,
+      region: data.region || "",
+      features: data.features || "",
+      image_url: imageUrl,
+      status: data.status === "sold" ? "sold" : "available",
+      updated_at: new Date().toISOString()
+    };
+
+    const { error } = await sb
+      .from("accounts_catalog")
+      .insert(listing);
+
+    if (error) throw error;
+
+    form.reset();
+    alert("Account listing saved successfully!");
+    await loadAdmin();
+    await loadAccountsCatalog();
+    render();
+
+  } catch (error) {
+    alert("Could not save listing: " +
+      (error?.message || "Unknown error"));
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Save Account Listing";
+    }
+  }
+                 }
 
 async function setAccountStatus(id, status){
   const { error } = await sb
