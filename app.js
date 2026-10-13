@@ -1891,6 +1891,12 @@ async function refreshProviderStatus(orderId){
 function admin(){
   const pending=state.adminTopups.filter(t=>t.status==='pending');
 
+  const completedOrders=state.adminOrders.filter(o=>o.status==='completed');
+  const totalSales=completedOrders.reduce((sum,o)=>sum+Number(o.total_amount_ngn||0),0);
+  const recordedCosts=completedOrders.reduce((sum,o)=>sum+Number(o.provider_charge_ngn||0),0);
+  const missingCosts=completedOrders.filter(o=>o.provider_charge_ngn==null).length;
+  const estimatedProfit=totalSales-recordedCosts;
+
   return shell(`
     <section class="hero">
       <small>ADMIN CONTROL PANEL</small>
