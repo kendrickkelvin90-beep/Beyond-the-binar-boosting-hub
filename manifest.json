@@ -1,0 +1,18 @@
+{
+  "name": "Beyond The Binary Boosting Hub",
+  "short_name": "Boost Hub",
+  "description": "Boost your social media and manage your services in one place.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#09090d",
+  "theme_color": "#09090d",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
