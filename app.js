@@ -393,6 +393,16 @@ async function loadAccountsCatalog(){
   }
 }
 
+async function openAccountsPlatform(platform){
+  state.view='accounts';
+  state.accountsCategory=platform;
+  state.accountsSubcategory='All Listings';
+  state.accountsYear='';
+  state.accountsFollowers='';
+  state.accountsCatalog=[];
+  state.accountsCatalogLoaded=false;
+  render();
+}
 function accountsPage(){
   const platforms=[
     {name:'Instagram',emoji:'📸'},
