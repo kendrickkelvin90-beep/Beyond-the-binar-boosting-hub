@@ -368,15 +368,48 @@ function boostPage(){
 }
 
 
+
 function accountsPage(){
   const platforms = [
-    { name: 'Instagram', icon: '📸' },
-    { name: 'TikTok', icon: '🎵' },
-    { name: 'Facebook', icon: '📘' },
-    { name: 'Telegram', icon: '✈️' },
-    { name: 'X', icon: '𝕏' },
-    { name: 'Other Accounts', icon: '🌐' }
+    { name: 'Instagram', icon: 'https://cdn.simpleicons.org/instagram/E4405F', emoji: '📸' },
+    { name: 'TikTok', icon: 'https://cdn.simpleicons.org/tiktok/000000', emoji: '🎵' },
+    { name: 'Facebook', icon: 'https://cdn.simpleicons.org/facebook/0866FF', emoji: '📘' },
+    { name: 'Telegram', icon: 'https://cdn.simpleicons.org/telegram/26A5E4', emoji: '✈️' },
+    { name: 'X', icon: 'https://cdn.simpleicons.org/x/000000', emoji: '𝕏' },
+    { name: 'Spotify', icon: 'https://cdn.simpleicons.org/spotify/1DB954', emoji: '🎧' },
+    { name: 'Grindr', icon: 'https://cdn.simpleicons.org/grindr/FFB800', emoji: '🐻' },
+    { name: 'Other Accounts', icon: '', emoji: '🌐' }
   ];
+
+  const selected = state.accountsCategory || '';
+
+  if (selected) {
+    return shell(`
+      <div style="margin-bottom:15px">
+        <button class="tab"
+          onclick="state.accountsCategory='';render()">
+          ← Back to Categories
+        </button>
+      </div>
+
+      <section class="hero" style="text-align:center">
+        <h2>${esc(selected)} Accounts</h2>
+        <p>Browse available ${esc(selected)} account listings.</p>
+      </section>
+
+      <section class="card">
+        <h3>${esc(selected)} Accounts for Sale</h3>
+        <div class="empty">
+          No listings have been added to this category yet.
+          Please check back later.
+        </div>
+        <button class="btn secondary"
+          onclick="state.accountsCategory='';render()">
+          View Other Categories
+        </button>
+      </section>
+    `);
+  }
 
   return shell(`
     <div style="margin-bottom:15px">
@@ -389,29 +422,41 @@ function accountsPage(){
     <section class="hero" style="text-align:center">
       <small>BEYOND THE BINARY</small>
       <h2>🛍️ Accounts for Sale</h2>
-      <p>Browse social media account categories.</p>
+      <p>Tap a platform to explore its account listings.</p>
     </section>
 
     <section class="card">
       <h3>Choose an account category</h3>
-      <p class="hint">
-        Available listings and prices will be displayed here
-        once stock has been added.
-      </p>
 
       <div class="service-list">
         ${platforms.map(platform => `
-          <div class="order" style="margin:10px 0;padding:14px">
-            <b>${platform.icon} ${esc(platform.name)}</b>
-            <p class="hint" style="margin:6px 0 0">
-              Check back for available listings.
-            </p>
-          </div>
+          <button type="button"
+            class="order"
+            style="display:flex;align-items:center;gap:14px;width:100%;text-align:left;margin:10px 0;padding:16px;cursor:pointer"
+            onclick="state.accountsCategory='${platform.name}';render()">
+
+            <span style="width:44px;height:44px;min-width:44px;border-radius:12px;background:#f1f1f1;display:flex;align-items:center;justify-content:center">
+              ${platform.icon
+                ? `<img src="${platform.icon}" alt="${platform.name} icon" style="width:27px;height:27px;object-fit:contain" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'">`
+                : ''}
+              <span style="${platform.icon ? 'display:none;' : ''}font-size:25px">${platform.emoji}</span>
+            </span>
+
+            <span>
+              <b>${esc(platform.name)}</b>
+              <span class="hint" style="display:block;margin-top:5px">
+                Tap to view category
+              </span>
+            </span>
+
+            <span style="margin-left:auto;font-size:22px">›</span>
+          </button>
         `).join('')}
       </div>
     </section>
   `);
 }
+
 
 function dashboardPage(){
   
