@@ -371,16 +371,24 @@ function boostPage(){
 
 function accountsPage(){
   const platforms = [
-    { name: 'Instagram', icon: 'https://cdn.simpleicons.org/instagram/E4405F', emoji: '📸' },
-    { name: 'TikTok', icon: 'https://cdn.simpleicons.org/tiktok/000000', emoji: '🎵' },
-    { name: 'Facebook', icon: 'https://cdn.simpleicons.org/facebook/0866FF', emoji: '📘' },
-    { name: 'Telegram', icon: 'https://cdn.simpleicons.org/telegram/26A5E4', emoji: '✈️' },
-    { name: 'X', icon: 'https://cdn.simpleicons.org/x/000000', emoji: '𝕏' },
-    { name: 'Spotify', icon: 'https://cdn.simpleicons.org/spotify/1DB954', emoji: '🎧' },
-    { name: 'Grindr', icon: 'https://cdn.simpleicons.org/grindr/FFB800', emoji: '🐻' },
-    { name: 'Other Accounts', icon: '', emoji: '🌐' }
-  ];
-
+  { name: 'Instagram', icon: 'https://cdn.simpleicons.org/instagram/E4405F', emoji: '📸' },
+  { name: 'TikTok', icon: 'https://cdn.simpleicons.org/tiktok/000000', emoji: '🎵' },
+  { name: 'Facebook', icon: 'https://cdn.simpleicons.org/facebook/0866FF', emoji: '📘' },
+  { name: 'Telegram', icon: 'https://cdn.simpleicons.org/telegram/26A5E4', emoji: '✈️' },
+  { name: 'X', icon: 'https://cdn.simpleicons.org/x/000000', emoji: '𝕏' },
+  { name: 'Spotify', icon: 'https://cdn.simpleicons.org/spotify/1DB954', emoji: '🎧' },
+  { name: 'Grindr', icon: 'https://cdn.simpleicons.org/grindr/FFB800', emoji: '🐻' },
+  { name: 'Tinder', icon: '', emoji: '❤️' },
+  { name: 'Bumble', icon: '', emoji: '🐝' },
+  { name: 'Badoo', icon: '', emoji: '💜' },
+  { name: 'Hinge', icon: '', emoji: '💞' },
+  { name: 'Other Dating Apps', icon: '', emoji: '💘' },
+  { name: 'OnlyFans', icon: '', emoji: '🔵' },
+  { name: 'Fansly', icon: '', emoji: '💠' },
+  { name: 'Google Voice', icon: '', emoji: '📞' },
+  { name: 'Snapchat', icon: 'https://cdn.simpleicons.org/snapchat/FFFC00', emoji: '👻' },
+  { name: 'Other Accounts', icon: '', emoji: '🌐' }
+];
   const selected = state.accountsCategory || '';
 
   if (selected) {
