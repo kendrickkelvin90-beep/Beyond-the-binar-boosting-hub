@@ -601,4 +601,46 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(212, 175, 55, .14);
 }
 
+/* FIX TEXT READABILITY ON BLACK BACKGROUND */
+body,
+.card,
+.order,
+.platform-choice,
+.notice,
+.status,
+.payment,
+.title p,
+.hint,
+label,
+p {
+  color: #f5f1e7;
+}
+
+.hero p,
+.hint,
+.title p,
+.order small,
+.payment small {
+  color: #c8c0af;
+}
+
+.platform-name {
+  color: #f5f1e7;
+}
+
+.platform-choice.active .platform-name {
+  color: #111111;
+}
+
+input,
+select {
+  color: #f5f1e7;
+  background: #101010;
+}
+
+input::placeholder {
+  color: #c8c0af;
+}
+
+
 
