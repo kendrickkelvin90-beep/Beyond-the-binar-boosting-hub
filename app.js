@@ -414,10 +414,14 @@ function dashboardPage(){
 let foreignCatalogData = null;
 
 async function loadForeignCatalog(kind) {
+
+let foreignSelectedAppId = null;
+
+async function loadForeignCatalog(kind) {
   const output = document.getElementById('foreignCatalogOutput');
   if (!output) return;
 
-  output.innerHTML = '<p class="hint">Loading live catalog...</p>';
+  output.innerHTML = '<p class="hint">Loading catalog...</p>';
 
   try {
     const { data, error } = await sb.functions.invoke('fleexa-catalog', {
@@ -432,51 +436,208 @@ async function loadForeignCatalog(kind) {
 
     foreignCatalogData = data.data;
 
-const raw = data.data;
-const rows = Array.isArray(raw)
-  ? raw
-  : Array.isArray(raw?.data)
-    ? raw.data
-    : Array.isArray(raw?.products)
-      ? raw.products
-      : Array.isArray(raw?.services)
-        ? raw.services
-        : [];
+    const getRows = value => {
+      if (Array.isArray(value)) return value;
+      if (!value || typeof value !== 'object') return [];
 
-if (!rows.length) {
-  output.innerHTML =
-    '<p class="hint">No number or product options were returned for this category. Try another catalog.</p>';
-  return;
-}
+      for (const key of [
+        'data', 'products', 'services',
+        'countries', 'apps', 'results'
+      ]) {
+        if (Array.isArray(value[key])) return value[key];
+      }
 
-output.innerHTML = rows.map(item => {
-  const name = item.name || item.service ||
-    item.product || item.title || item.id || 'Service option';
+      return [];
+    };
 
-  const price = item.price_ngn ??
-    item.api_rate_ngn ?? item.price ?? item.api_rate_usd;
+    const rows = getRows(data.data);
 
-  const quantity = item.quantity ?? item.stock;
+    if (!rows.length) {
+      output.innerHTML =
+        '<p class="hint">No options were returned. Try another catalog.</p>';
+      return;
+    }
 
-  return `
-    <div class="order" style="margin:10px 0;padding:12px">
-      <strong>${esc(name)}</strong>
-      <p class="hint">Price: ${
-        price == null ? 'Not provided' : esc(price)
-      }</p>
-      <p class="hint">Available quantity: ${
-        quantity == null ? 'Not reported' : esc(quantity)
-      }</p>
-    </div>
-  `;
-}).join('');
+    output.innerHTML = rows.map((item, index) => {
+      const name = item.name || item.service ||
+        item.product || item.title || item.country ||
+        item.id || 'Service option';
+
+      const price = item.price_ngn ??
+        item.api_rate_ngn ?? item.price ?? item.api_rate_usd;
+
+      const quantity = item.quantity ?? item.stock;
+
+      return `
+        <div class="order" style="margin:10px 0;padding:12px">
+          <strong>${esc(name)}</strong>
+          <p class="hint">Price: ${
+            price == null ? 'Check availability' : esc(price)
+          }</p>
+          <p class="hint">Available quantity: ${
+            quantity == null ? 'Not reported' : esc(quantity)
+          }</p>
+          <button class="btn secondary foreign-option"
+            data-index="${index}" style="margin-top:8px">
+            Select ${esc(name)}
+          </button>
+        </div>
+      `;
+    }).join('');
+
+    output.querySelectorAll('.foreign-option').forEach(button => {
+      button.addEventListener('click', async () => {
+        const item = rows[Number(button.dataset.index)];
+        const appId = item.appId ?? item.app_id ?? item.id;
+        const name = item.name || item.service ||
+          item.product || item.title || item.id || 'Selected option';
+
+        if (kind !== 'sms5_products' && kind !== 'sms5_apps') {
+          output.insertAdjacentHTML(
+            'afterbegin',
+            '<p class="hint">This item needs a supported pricing and availability lookup before purchase.</p>'
+          );
+          return;
+        }
+
+        if (!appId) {
+          output.insertAdjacentHTML(
+            'afterbegin',
+            '<p class="error">This item has no app ID. The supplier response must be checked.</p>'
+          );
+          return;
+        }
+
+        foreignSelectedAppId = String(appId);
+        output.innerHTML = '<p class="hint">Loading countries...</p>';
+
+        try {
+          const result = await sb.functions.invoke('fleexa-catalog', {
+            body: {
+              action: 'sms5_countries_with_services',
+              appId: foreignSelectedAppId
+            }
+          });
+
+          if (result.error) throw result.error;
+
+          if (!result.data || result.data.ok !== true) {
+            throw new Error(
+              result.data?.error || 'Could not load countries.'
+            );
+          }
+
+          const countries = getRows(result.data.data);
+
+          if (!countries.length) {
+            output.innerHTML =
+              '<p class="hint">No countries were returned for this service.</p>';
+            return;
+          }
+
+          output.innerHTML =
+            '<h3>Choose a country for ' + esc(name) + '</h3>' +
+            countries.map((country, index) => `
+              <div class="order" style="margin:10px 0;padding:12px">
+                <strong>${esc(
+                  country.name || country.country ||
+                  country.title || country.id || 'Country'
+                )}</strong>
+                <p class="hint">Check available offers for this country.</p>
+                <button class="btn secondary country-option"
+                  data-index="${index}">
+                  Check this country
+                </button>
+              </div>
+            `).join('');
+
+          output.querySelectorAll('.country-option').forEach(countryButton => {
+            countryButton.addEventListener('click', async () => {
+              const country = countries[
+                Number(countryButton.dataset.index)
+              ];
+
+              const countryId = country.countryId ??
+                country.country_id ?? country.iso2 ??
+                country.code ?? country.id;
+
+              if (!countryId) {
+                output.insertAdjacentHTML(
+                  'afterbegin',
+                  '<p class="error">No country ID was provided by the supplier.</p>'
+                );
+                return;
+              }
+
+              output.innerHTML =
+                '<p class="hint">Checking offers...</p>';
+
+              try {
+                const offerResult = await sb.functions.invoke(
+                  'fleexa-catalog',
+                  {
+                    body: {
+                      action: 'sms5_country_offers',
+                      countryId: String(countryId),
+                      appId: foreignSelectedAppId
+                    }
+                  }
+                );
+
+                if (offerResult.error) throw offerResult.error;
+
+                if (!offerResult.data || offerResult.data.ok !== true) {
+                  throw new Error(
+                    offerResult.data?.error || 'Could not load offers.'
+                  );
+                }
+
+                const offers = getRows(offerResult.data.data);
+
+                output.innerHTML = offers.length
+                  ? '<h3>Available offers</h3>' +
+                    offers.map(offer => `
+                      <div class="order"
+                        style="margin:10px 0;padding:12px">
+                        <strong>${esc(
+                          offer.name || offer.title ||
+                          offer.id || 'Number offer'
+                        )}</strong>
+                        <p class="hint">Price: ${esc(
+                          offer.price_ngn ?? offer.price ??
+                          'Not provided'
+                        )}</p>
+                        <p class="hint">Quantity: ${esc(
+                          offer.quantity ?? offer.stock ??
+                          'Not reported'
+                        )}</p>
+                      </div>
+                    `).join('')
+                  : '<p class="hint">No offers were returned for this country and service.</p>';
+
+              } catch (err) {
+                output.innerHTML = '<p class="error">' +
+                  esc(err.message || 'Offer check failed.') +
+                  '</p>';
+              }
+            });
+          });
+
+        } catch (err) {
+          output.innerHTML = '<p class="error">' +
+            esc(err.message || 'Country lookup failed.') +
+            '</p>';
+        }
+      });
+    });
+
   } catch (err) {
-    output.innerHTML =
-      '<p class="error">' +
+    output.innerHTML = '<p class="error">' +
       esc(err.message || 'Catalog request failed.') +
       '</p>';
   }
 }
+
 
 function foreignNumbersPage() {
   return shell(`
