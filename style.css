@@ -526,3 +526,79 @@ footer{
   }
 }
 
+/* PREMIUM BLACK AND GOLD THEME */
+:root {
+  --bg: #080808;
+  --panel: #141414;
+  --panel2: #1b1b1b;
+  --line: #383024;
+  --text: #f5f1e7;
+  --muted: #b6ad9b;
+  --accent: #d4af37;
+  --accent2: #a77d12;
+  --gold: #d4af37;
+  --gold2: #f4d675;
+}
+
+body {
+  background: linear-gradient(180deg, #080808, #101010);
+  color: var(--text);
+}
+
+.card,
+.order,
+.pill,
+.platform-choice {
+  background: #151515;
+  color: var(--text);
+  border-color: var(--line);
+}
+
+input,
+select {
+  background: #101010;
+  color: var(--text);
+  border-color: var(--line);
+}
+
+.btn {
+  background: linear-gradient(135deg, #f4d675, #a77d12);
+  color: #111;
+  border: 0;
+}
+
+.btn.secondary,
+.tab {
+  background: #191919;
+  color: #d4af37;
+  border: 1px solid #6b5721;
+}
+
+.tab.active,
+.quick .on,
+.platform-choice.active {
+  background: #d4af37;
+  color: #111;
+  border-color: #f4d675;
+}
+
+.hero em,
+.hero small,
+.eyebrow,
+.total strong,
+.payment strong {
+  color: #d4af37;
+}
+
+.payment {
+  background: #1b1b1b;
+  border-color: #51421b;
+}
+
+input:focus,
+select:focus {
+  border-color: #d4af37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, .14);
+}
+
+
