@@ -372,6 +372,27 @@ function boostPage(){
 
 
 
+
+async function loadAccountsCatalog(){
+  const {data,error}=await sb
+    .from('accounts_catalog')
+    .select('*')
+    .order('created_at',{ascending:false});
+
+  if(error){
+    console.error('Accounts catalog:',error.message);
+    state.accountsCatalog=[];
+  }else{
+    state.accountsCatalog=data||[];
+  }
+
+  state.accountsCatalogLoaded=true;
+
+  if(state.view==='accounts'){
+    render();
+  }
+}
+
 function accountsPage(){
   const platforms = [
     {name:'Instagram',emoji:'📸'},
