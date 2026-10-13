@@ -621,15 +621,111 @@ output.innerHTML = offers.length
   : '<p class="hint">No offers were returned for this country and service.</p>';
 
 output.querySelectorAll('.select-number-offer').forEach(button => {
-  button.addEventListener('click', () => {
+  button.textContent = 'Buy number — ₦3,500';
+
+  button.addEventListener('click', async () => {
     const offer = offers[Number(button.dataset.index)];
     const offerName = offer.name || offer.title || offer.id || 'Number offer';
 
-    output.insertAdjacentHTML(
-      'afterbegin',
-      '<p class="hint">Selected: ' + esc(offerName) +
-      '. Selling price: ₦3,500. Checkout is not connected yet.</p>'
-    );
+    if (!confirm('Buy ' + offerName + ' SMS verification for ₦3,500? This will charge your Boost Hub wallet.')) return;
+
+    button.disabled = true;
+    button.textContent = 'Processing purchase...';
+
+    try {
+      const makeKey = () => {
+        if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') {
+          return globalThis.crypto.randomUUID();
+        }
+
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+          const r = Math.random() * 16 | 0;
+          return (c === 'x' ? r : (r & 3 | 8)).toString(16);
+        });
+      };
+
+      const purchase = await sb.functions.invoke('fleexa-orders', {
+        body: {
+          action: 'buy_sms5',
+          serviceName: String(foreignSelectedAppId),
+          country_code: 'US',
+          maxPrice: String(offer.price_usd || '0.50'),
+          idempotency_key: makeKey()
+        }
+      });
+
+      if (purchase.error) throw purchase.error;
+
+      if (!purchase.data || purchase.data.ok !== true) {
+        throw new Error(
+          purchase.data?.error || 'Purchase failed. Check your wallet and try again.'
+        );
+      }
+
+      const orderId = purchase.data.order_id;
+      const phone = purchase.data.number_or_email || 'Number pending';
+
+      output.innerHTML =
+        '<h3>SMS OTP 5 Purchase Successful</h3>' +
+        '<p><strong>Service:</strong> ' + esc(offerName) + '</p>' +
+        '<p><strong>Phone number:</strong> ' + esc(phone) + '</p>' +
+        '<p><strong>Amount charged:</strong> ₦' +
+        esc(purchase.data.retail_amount_ngn || 3500) + '</p>' +
+        '<p><strong>Order ID:</strong> ' + esc(orderId) + '</p>' +
+        '<p class="hint">Keep this page open and check for your OTP.</p>' +
+        '<button class="btn check-sms5-otp">Check OTP</button>' +
+        '<div id="sms5OtpResult" class="hint" style="margin-top:12px"></div>';
+
+      output.querySelector('.check-sms5-otp').addEventListener('click', async event => {
+        const checkButton = event.currentTarget;
+        const resultBox = document.getElementById('sms5OtpResult');
+
+        checkButton.disabled = true;
+        checkButton.textContent = 'Checking...';
+        resultBox.textContent = 'Checking for your verification code...';
+
+        try {
+          const checked = await sb.functions.invoke('fleexa-orders', {
+            body: {
+              action: 'check_order',
+              order_id: Number(orderId)
+            }
+          });
+
+          if (checked.error) throw checked.error;
+
+          if (!checked.data || checked.data.ok !== true) {
+            throw new Error(checked.data?.error || 'Could not check OTP yet.');
+          }
+
+          if (checked.data.otp) {
+            resultBox.innerHTML =
+              '<p><strong>Your OTP:</strong> ' +
+              esc(checked.data.otp) + '</p><p>' +
+              esc(checked.data.status || '') + '</p>';
+          } else {
+            resultBox.textContent =
+              'No code received yet. Status: ' +
+              (checked.data.status || 'waiting_for_otp') +
+              '. Tap Check OTP again shortly.';
+          }
+        } catch (err) {
+          resultBox.textContent = err.message || 'OTP check failed. Please try again.';
+        } finally {
+          checkButton.disabled = false;
+          checkButton.textContent = 'Check OTP';
+        }
+      });
+
+    } catch (err) {
+      output.insertAdjacentHTML(
+        'afterbegin',
+        '<p class="error">' + esc(err.message || 'Purchase failed.') + '</p>'
+      );
+
+      button.disabled = false;
+      button.textContent = 'Buy number — ₦3,500';
+    }
   });
 });
 
