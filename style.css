@@ -642,5 +642,26 @@ input::placeholder {
   color: #c8c0af;
 }
 
+/* FIX SERVICE DETAILS BOX */
+.notice,
+#serviceInfo {
+  background: #191919 !important;
+  color: #f5f1e7 !important;
+  border: 1px solid #d4af37 !important;
+}
+
+.notice div,
+.notice p,
+#serviceInfo div,
+#serviceInfo strong {
+  color: #f5f1e7 !important;
+}
+
+.notice strong,
+#serviceInfo strong {
+  color: #f4d675 !important;
+}
+
+
 
 
