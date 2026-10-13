@@ -753,7 +753,113 @@ output.querySelectorAll('.select-number-offer').forEach(button => {
 }
 
 
+
 function foreignNumbersPage() {
+  globalThis.loadMyForeignOrders = async function () {
+    const output = document.getElementById('foreignOrdersOutput');
+    if (!output) return;
+
+    output.innerHTML = '<p class="hint">Loading your orders...</p>';
+
+    try {
+      const result = await sb.functions.invoke('fleexa-orders', {
+        body: { action: 'list_orders' }
+      });
+
+      if (result.error) throw result.error;
+      if (!result.data || result.data.ok !== true) {
+        throw new Error(result.data?.error || 'Could not load your orders.');
+      }
+
+      const orders = result.data.orders || [];
+
+      if (!orders.length) {
+        output.innerHTML =
+          '<p class="hint">No saved number orders were found in your account.</p>';
+        return;
+      }
+
+      output.innerHTML = orders.map(order => {
+        const service = String(order.service_name || 'Number service')
+          .replace(/^sms5:/, '');
+
+        return `
+          <div class="order" style="margin:12px 0;padding:12px">
+            <h4>${esc(service)}</h4>
+            <p><strong>Order ID:</strong> ${esc(String(order.id))}</p>
+            <p><strong>Number:</strong> ${esc(order.delivery_value || 'Not available')}</p>
+            <p><strong>Amount:</strong> ₦${esc(String(order.retail_amount_ngn ?? 'N/A'))}</p>
+            <p><strong>Status:</strong> ${esc(order.status || 'Unknown')}</p>
+            <p class="hint">${esc(order.created_at || '')}</p>
+            <button class="btn check-saved-otp"
+              data-order-id="${esc(String(order.id))}">
+              Check OTP
+            </button>
+            <div id="foreignOtpResult-${esc(String(order.id))}"
+              class="hint" style="margin-top:10px">
+              ${order.last_otp
+                ? 'Last OTP: ' + esc(String(order.last_otp))
+                : 'Tap Check OTP to look for your code.'}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      output.querySelectorAll('.check-saved-otp').forEach(button => {
+        button.addEventListener('click', async () => {
+          const orderId = Number(button.dataset.orderId);
+          const resultBox = document.getElementById(
+            'foreignOtpResult-' + orderId
+          );
+
+          button.disabled = true;
+          button.textContent = 'Checking...';
+          resultBox.textContent = 'Checking for your verification code...';
+
+          try {
+            const checked = await sb.functions.invoke('fleexa-orders', {
+              body: {
+                action: 'check_order',
+                order_id: orderId
+              }
+            });
+
+            if (checked.error) throw checked.error;
+
+            if (!checked.data || checked.data.ok !== true) {
+              throw new Error(
+                checked.data?.error || 'Could not check this order.'
+              );
+            }
+
+            if (checked.data.otp) {
+              resultBox.innerHTML =
+                '<strong>Your OTP:</strong> ' +
+                esc(String(checked.data.otp)) +
+                '<p>Status: ' +
+                esc(String(checked.data.status || 'Received')) +
+                '</p>';
+            } else {
+              resultBox.textContent =
+                'No OTP received yet. Status: ' +
+                String(checked.data.status || 'waiting_for_otp') +
+                '. Try again shortly.';
+            }
+          } catch (error) {
+            resultBox.textContent =
+              error.message || 'OTP check failed. Please try again.';
+          } finally {
+            button.disabled = false;
+            button.textContent = 'Check OTP';
+          }
+        });
+      });
+    } catch (error) {
+      output.textContent =
+        error.message || 'Could not load your orders. Please try again.';
+    }
+  };
+
   return shell(`
     <div style="margin-bottom:15px">
       <button class="tab" onclick="state.view='home';render()">
@@ -765,6 +871,17 @@ function foreignNumbersPage() {
       <small>INTERNATIONAL SERVICES</small>
       <h2>Foreign Numbers & OTP</h2>
       <p>Explore supported countries, SMS services, rental options and temporary email.</p>
+    </section>
+
+    <section class="card">
+      <h3>My Number Orders</h3>
+      <p class="hint">Find a previously purchased number and check for its OTP.</p>
+      <button class="btn" onclick="loadMyForeignOrders()">
+        My Number Orders / Load Orders
+      </button>
+      <div id="foreignOrdersOutput" style="margin-top:14px">
+        Tap My Number Orders to find your saved purchases.
+      </div>
     </section>
 
     <section class="card">
@@ -801,6 +918,7 @@ function foreignNumbersPage() {
     </section>
   `);
 }
+
 function startDashboardAutoRefresh(){
   if(statusTimer)clearInterval(statusTimer);
   statusTimer=null;
