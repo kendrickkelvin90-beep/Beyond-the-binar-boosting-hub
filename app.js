@@ -597,26 +597,41 @@ async function loadForeignCatalog(kind) {
 
                 const offers = getRows(offerResult.data.data);
 
-                output.innerHTML = offers.length
-                  ? '<h3>Available offers</h3>' +
-                    offers.map(offer => `
-                      <div class="order"
-                        style="margin:10px 0;padding:12px">
-                        <strong>${esc(
-                          offer.name || offer.title ||
-                          offer.id || 'Number offer'
-                        )}</strong>
-                        <p class="hint">Price: ${esc(
-                          offer.price_ngn ?? offer.price ??
-                          'Not provided'
-                        )}</p>
-                        <p class="hint">Quantity: ${esc(
-                          offer.quantity ?? offer.stock ??
-                          'Not reported'
-                        )}</p>
-                      </div>
-                    `).join('')
-                  : '<p class="hint">No offers were returned for this country and service.</p>';
+                
+output.innerHTML = offers.length
+  ? '<h3>Available offers</h3>' +
+    offers.map((offer, index) => `
+      <div class="order" style="margin:10px 0;padding:12px">
+        <strong>${esc(
+          offer.name || offer.title || offer.id || 'Number offer'
+        )}</strong>
+        <p class="hint">Your selling price: ₦3,500</p>
+        <p class="hint">Supplier price: ${esc(
+          offer.price_ngn ?? offer.price ?? 'Not provided'
+        )}</p>
+        <p class="hint">Available quantity: ${esc(
+          offer.quantity ?? offer.stock ?? 'Not reported'
+        )}</p>
+        <button class="btn secondary select-number-offer"
+          data-index="${index}">
+          Select offer
+        </button>
+      </div>
+    `).join('')
+  : '<p class="hint">No offers were returned for this country and service.</p>';
+
+output.querySelectorAll('.select-number-offer').forEach(button => {
+  button.addEventListener('click', () => {
+    const offer = offers[Number(button.dataset.index)];
+    const offerName = offer.name || offer.title || offer.id || 'Number offer';
+
+    output.insertAdjacentHTML(
+      'afterbegin',
+      '<p class="hint">Selected: ' + esc(offerName) +
+      '. Selling price: ₦3,500. Checkout is not connected yet.</p>'
+    );
+  });
+});
 
               } catch (err) {
                 output.innerHTML = '<p class="error">' +
