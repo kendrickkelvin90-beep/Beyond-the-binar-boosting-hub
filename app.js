@@ -254,12 +254,21 @@ function home(){
         onclick="state.view='boost';render()">
         🚀 BOOST ACCOUNT
       </button>
+
 <button
   class="btn secondary"
   style="margin-top:12px"
   onclick="state.view='foreign';render()">
   🌍 FOREIGN NUMBERS & OTP
 </button>
+
+<button
+  class="btn secondary"
+  style="margin-top:12px"
+  onclick="state.view='accounts';render()">
+  🛍️ ACCOUNTS FOR SALE
+</button>
+
 
     </section>
 
