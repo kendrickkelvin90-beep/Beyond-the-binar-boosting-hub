@@ -369,98 +369,194 @@ function boostPage(){
 
 
 
+
 function accountsPage(){
   const platforms = [
-  { name: 'Instagram', icon: 'https://cdn.simpleicons.org/instagram/E4405F', emoji: '📸' },
-  { name: 'TikTok', icon: 'https://cdn.simpleicons.org/tiktok/000000', emoji: '🎵' },
-  { name: 'Facebook', icon: 'https://cdn.simpleicons.org/facebook/0866FF', emoji: '📘' },
-  { name: 'Telegram', icon: 'https://cdn.simpleicons.org/telegram/26A5E4', emoji: '✈️' },
-  { name: 'X', icon: 'https://cdn.simpleicons.org/x/000000', emoji: '𝕏' },
-  { name: 'Spotify', icon: 'https://cdn.simpleicons.org/spotify/1DB954', emoji: '🎧' },
-  { name: 'Grindr', icon: 'https://cdn.simpleicons.org/grindr/FFB800', emoji: '🐻' },
-  { name: 'Tinder', icon: '', emoji: '❤️' },
-  { name: 'Bumble', icon: '', emoji: '🐝' },
-  { name: 'Badoo', icon: '', emoji: '💜' },
-  { name: 'Hinge', icon: '', emoji: '💞' },
-  { name: 'Other Dating Apps', icon: '', emoji: '💘' },
-  { name: 'OnlyFans', icon: '', emoji: '🔵' },
-  { name: 'Fansly', icon: '', emoji: '💠' },
-  { name: 'Google Voice', icon: '', emoji: '📞' },
-  { name: 'Snapchat', icon: 'https://cdn.simpleicons.org/snapchat/FFFC00', emoji: '👻' },
-  { name: 'Other Accounts', icon: '', emoji: '🌐' }
-];
+    {name:'Instagram',emoji:'📸'},
+    {name:'TikTok',emoji:'🎵'},
+    {name:'Facebook',emoji:'📘'},
+    {name:'Telegram',emoji:'✈️'},
+    {name:'X',emoji:'𝕏'},
+    {name:'Spotify',emoji:'🎧'},
+    {name:'Grindr',emoji:'🐻'},
+    {name:'Tinder',emoji:'❤️'},
+    {name:'Bumble',emoji:'🐝'},
+    {name:'Badoo',emoji:'💜'},
+    {name:'Hinge',emoji:'💞'},
+    {name:'Other Dating Apps',emoji:'💘'},
+    {name:'OnlyFans',emoji:'🔵'},
+    {name:'Fansly',emoji:'💠'},
+    {name:'Google Voice',emoji:'📞'},
+    {name:'Snapchat',emoji:'👻'},
+    {name:'Other Accounts',emoji:'🌐'}
+  ];
+
+  const menus = {
+    Facebook:[
+      'Personal Profiles',
+      'Pages',
+      'Pages with Followers',
+      'Business Pages',
+      'Accounts by Creation Year',
+      'Other Facebook Options'
+    ],
+    Instagram:[
+      'Personal Profiles',
+      'Creator Accounts',
+      'Business Accounts',
+      'Accounts by Follower Count',
+      'Accounts by Creation Year'
+    ],
+    TikTok:[
+      'Personal Profiles',
+      'Creator Accounts',
+      'Accounts by Follower Count',
+      'Accounts by Creation Year'
+    ],
+    Telegram:[
+      'Personal Accounts',
+      'Channels',
+      'Groups',
+      'Accounts by Creation Year'
+    ],
+    X:[
+      'Personal Profiles',
+      'Creator Profiles',
+      'Accounts by Follower Count',
+      'Accounts by Creation Year'
+    ]
+  };
+
   const selected = state.accountsCategory || '';
+  const sub = state.accountsSubcategory || '';
 
-  if (selected) {
+  if(selected && !sub){
+    const items = menus[selected] || [
+      'Available Account Types',
+      'Accounts by Region',
+      'Other Options'
+    ];
+
     return shell(`
-      <div style="margin-bottom:15px">
-        <button class="tab"
-          onclick="state.accountsCategory='';render()">
-          ← Back to Categories
-        </button>
-      </div>
+      <button class="tab"
+        onclick="state.accountsCategory='';
+        state.accountsSubcategory='';render()">
+        ← Back to Categories
+      </button>
 
-      <section class="hero" style="text-align:center">
+      <section class="hero">
         <h2>${esc(selected)} Accounts</h2>
-        <p>Browse available ${esc(selected)} account listings.</p>
+        <p>Choose the account type you want.</p>
       </section>
 
       <section class="card">
-        <h3>${esc(selected)} Accounts for Sale</h3>
+        <h3>${esc(selected)} Menu</h3>
+        ${items.map(item => `
+          <button class="order"
+            style="display:block;width:100%;text-align:left;
+            padding:15px;margin:8px 0;cursor:pointer"
+            onclick="state.accountsSubcategory=${JSON.stringify(item)};
+            render()">
+            ${esc(item)}　›
+          </button>
+        `).join('')}
+      </section>
+    `);
+  }
+
+  if(selected && sub){
+    return shell(`
+      <button class="tab"
+        onclick="state.accountsSubcategory='';render()">
+        ← Back to ${esc(selected)} Menu
+      </button>
+
+      <section class="hero">
+        <h2>${esc(selected)}</h2>
+        <p>${esc(sub)}</p>
+      </section>
+
+      <section class="card">
+        <h3>Find an Account</h3>
+
+        <label>Account creation year</label>
+        <select style="width:100%;padding:12px;margin:8px 0"
+          onchange="state.accountsYear=this.value">
+          <option value="">Any verified year</option>
+          ${Array.from({length:13},(_,i)=>2026-i).map(year=>`
+            <option value="${year}"
+              ${String(state.accountsYear||'')===String(year)
+                ? 'selected' : ''}>${year}</option>
+          `).join('')}
+        </select>
+
+        <label>Followers or page likes</label>
+        <select style="width:100%;padding:12px;margin:8px 0"
+          onchange="state.accountsFollowers=this.value">
+          <option value="">Any count</option>
+          <option value="0-999">0–999</option>
+          <option value="1000-9999">1,000–9,999</option>
+          <option value="10000-49999">10,000–49,999</option>
+          <option value="50000+">50,000+</option>
+        </select>
+
+        <p class="hint">
+          Only verified account ages and follower counts should
+          be displayed on actual listings.
+        </p>
+      </section>
+
+      <section class="card">
+        <h3>Available Listings</h3>
         <div class="empty">
-          No listings have been added to this category yet.
-          Please check back later.
+          No verified stock has been added yet.
+          Prices will be added later.
         </div>
-        <button class="btn secondary"
-          onclick="state.accountsCategory='';render()">
-          View Other Categories
-        </button>
+
+        <h4>Every listing will include</h4>
+        <ul>
+          <li>Account type and description</li>
+          <li>Creation year, where verified</li>
+          <li>Followers or page likes, where relevant</li>
+          <li>Region and included features</li>
+          <li>Transfer and recovery information</li>
+          <li>Price when you set it</li>
+        </ul>
+
+        <p class="hint">
+          Private delivery details must only be provided after
+          payment confirmation and an authorized transfer.
+        </p>
       </section>
     `);
   }
 
   return shell(`
-    <div style="margin-bottom:15px">
-      <button class="tab"
-        onclick="state.view='home';render()">
-        ← Back Home
-      </button>
-    </div>
+    <button class="tab"
+      onclick="state.view='home';render()">
+      ← Back Home
+    </button>
 
-    <section class="hero" style="text-align:center">
-      <small>BEYOND THE BINARY</small>
+    <section class="hero">
       <h2>🛍️ Accounts for Sale</h2>
-      <p>Tap a platform to explore its account listings.</p>
+      <p>Choose a platform to explore its menu.</p>
     </section>
 
     <section class="card">
-      <h3>Choose an account category</h3>
-
-      <div class="service-list">
-        ${platforms.map(platform => `
-          <button type="button"
-            class="order"
-            style="display:flex;align-items:center;gap:14px;width:100%;text-align:left;margin:10px 0;padding:16px;cursor:pointer"
-            onclick="state.accountsCategory='${platform.name}';render()">
-
-            <span style="width:44px;height:44px;min-width:44px;border-radius:12px;background:#f1f1f1;display:flex;align-items:center;justify-content:center">
-              ${platform.icon
-                ? `<img src="${platform.icon}" alt="${platform.name} icon" style="width:27px;height:27px;object-fit:contain" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'">`
-                : ''}
-              <span style="${platform.icon ? 'display:none;' : ''}font-size:25px">${platform.emoji}</span>
-            </span>
-
-            <span>
-              <b>${esc(platform.name)}</b>
-              <span class="hint" style="display:block;margin-top:5px">
-                Tap to view category
-              </span>
-            </span>
-
-            <span style="margin-left:auto;font-size:22px">›</span>
-          </button>
-        `).join('')}
-      </div>
+      ${platforms.map(platform=>`
+        <button class="order"
+          style="display:flex;width:100%;align-items:center;
+          gap:12px;padding:15px;margin:8px 0;cursor:pointer"
+          onclick="state.accountsCategory=${JSON.stringify(platform.name)};
+          state.accountsSubcategory='';
+          state.accountsYear='';
+          state.accountsFollowers='';
+          render()">
+          <span style="font-size:25px">${platform.emoji}</span>
+          <b>${esc(platform.name)}</b>
+          <span style="margin-left:auto">›</span>
+        </button>
+      `).join('')}
     </section>
   `);
 }
