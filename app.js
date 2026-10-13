@@ -1010,6 +1010,11 @@ function render(){
   if(statusTimer)clearInterval(statusTimer);
   statusTimer=null;
 
+  if(state.view==='accounts'){
+    app.innerHTML=accountsPage();
+    return;
+  }
+
   if(!state.session){
     state.view='home';
     app.innerHTML=home();
