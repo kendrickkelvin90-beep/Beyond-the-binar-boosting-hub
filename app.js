@@ -427,8 +427,9 @@ function accountsPage(){
   const listings=(state.accountsCatalog||[]).filter(a=>
     a.status==='available'&&
     String(a.platform||'').toLowerCase()===selected.toLowerCase()&&
-    (!sub||String(a.category||'').toLowerCase()===sub.toLowerCase()||
-      String(a.category||'').toLowerCase().includes(sub.toLowerCase()))
+    (!sub||sub==='All Listings'||
+  String(a.category||'').toLowerCase()===sub.toLowerCase()||
+  String(a.category||'').toLowerCase().includes(sub.toLowerCase()))
   ).filter(a=>
     !state.accountsYear||String(a.creation_year||'')===String(state.accountsYear)
   ).filter(a=>{
