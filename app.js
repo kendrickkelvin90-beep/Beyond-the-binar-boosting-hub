@@ -82,7 +82,7 @@ function getFixedPrice(serviceType, quantity) {
   
 
 const serviceName={followers:'Followers',likes:'Likes',views:'Views'};
-let state={session:null,profile:null,orders:[],balance:0,topups:[],customers:[],adminOrders:[],adminTopups:[],walletBalances:{},providerServices:[],view:'home'};
+let state={session:null,profile:null,orders:[],balance:0,topups:[],customers:[],adminOrders:[],adminTopups:[],walletBalances:{},providerServices:[],accountsCatalog:[],accountsCatalogLoaded:false,accountEditingId:null,view:'home'};
 let statusTimer=null;
 const app=document.getElementById('app');
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
