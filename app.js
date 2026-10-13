@@ -367,6 +367,52 @@ function boostPage(){
   `);
 }
 
+
+function accountsPage(){
+  const platforms = [
+    { name: 'Instagram', icon: '📸' },
+    { name: 'TikTok', icon: '🎵' },
+    { name: 'Facebook', icon: '📘' },
+    { name: 'Telegram', icon: '✈️' },
+    { name: 'X', icon: '𝕏' },
+    { name: 'Other Accounts', icon: '🌐' }
+  ];
+
+  return shell(`
+    <div style="margin-bottom:15px">
+      <button class="tab"
+        onclick="state.view='home';render()">
+        ← Back Home
+      </button>
+    </div>
+
+    <section class="hero" style="text-align:center">
+      <small>BEYOND THE BINARY</small>
+      <h2>🛍️ Accounts for Sale</h2>
+      <p>Browse social media account categories.</p>
+    </section>
+
+    <section class="card">
+      <h3>Choose an account category</h3>
+      <p class="hint">
+        Available listings and prices will be displayed here
+        once stock has been added.
+      </p>
+
+      <div class="service-list">
+        ${platforms.map(platform => `
+          <div class="order" style="margin:10px 0;padding:14px">
+            <b>${platform.icon} ${esc(platform.name)}</b>
+            <p class="hint" style="margin:6px 0 0">
+              Check back for available listings.
+            </p>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  `);
+}
+
 function dashboardPage(){
   
 
