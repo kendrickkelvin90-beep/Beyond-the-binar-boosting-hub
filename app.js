@@ -2056,7 +2056,11 @@ function admin(){
         <label>Account Features</label>
         <input name="features" placeholder="e.g. verified email, page likes">
 
-        <label>Image URL</label>
+        
+<label>Account Photo (optional)</label>
+<input name="account_image" type="file" accept="image/*">
+<small>Choose a photo from your phone gallery. Maximum 5 MB.</small>
+
         <input name="image_url" type="url" placeholder="https://...">
 
         <label>Description</label>
