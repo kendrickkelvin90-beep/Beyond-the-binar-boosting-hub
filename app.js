@@ -538,51 +538,154 @@ function accountsPage(){
 
         <h4>Every listing will include</h4>
         <ul>
-          <li>Account type and description</li>
-          <li>Creation year, where verified</li>
-          <li>Followers or page likes, where relevant</li>
-          <li>Region and included features</li>
-          <li>Transfer and recovery information</li>
-          <li>Price when you set it</li>
-        </ul>
 
-        <p class="hint">
-          Private delivery details must only be provided after
-          payment confirmation and an authorized transfer.
-        </p>
+function accountsPage(){
+  const platforms=[
+    {name:'Instagram',emoji:'📸'},
+    {name:'TikTok',emoji:'🎵'},
+    {name:'Facebook',emoji:'📘'},
+    {name:'Snapchat',emoji:'👻'},
+    {name:'Telegram',emoji:'✈️'},
+    {name:'X',emoji:'𝕏'},
+    {name:'Spotify',emoji:'🎧'},
+    {name:'Grindr',emoji:'🐻'},
+    {name:'Tinder',emoji:'❤️'},
+    {name:'Bumble',emoji:'🐝'},
+    {name:'Badoo',emoji:'💜'},
+    {name:'Hinge',emoji:'💞'},
+    {name:'Other Dating Apps',emoji:'💘'},
+    {name:'OnlyFans',emoji:'🔵'},
+    {name:'Fansly',emoji:'💠'},
+    {name:'Google Voice',emoji:'📞'},
+    {name:'Other Accounts',emoji:'🌐'}
+  ];
+
+  const menus={
+    Facebook:['Personal Profiles','Pages','Pages with Followers','Business Pages','Accounts by Creation Year','Other Facebook Options'],
+    Instagram:['Personal Profiles','Creator Accounts','Business Accounts','Accounts by Follower Count','Accounts by Creation Year'],
+    TikTok:['Personal Profiles','Creator Accounts','Accounts by Follower Count','Accounts by Creation Year'],
+    Telegram:['Personal Accounts','Channels','Groups','Accounts by Creation Year'],
+    X:['Personal Profiles','Creator Profiles','Accounts by Follower Count','Accounts by Creation Year']
+  };
+
+  const selected=state.accountsCategory||'';
+  const sub=state.accountsSubcategory||'';
+  const listings=(state.accountsCatalog||[]).filter(a=>
+    a.status==='available'&&
+    String(a.platform||'').toLowerCase()===selected.toLowerCase()&&
+    (!sub||String(a.category||'').toLowerCase()===sub.toLowerCase()||
+      String(a.category||'').toLowerCase().includes(sub.toLowerCase()))
+  ).filter(a=>
+    !state.accountsYear||String(a.creation_year||'')===String(state.accountsYear)
+  ).filter(a=>{
+    const n=Number(a.follower_count||0);
+    const range=state.accountsFollowers||'';
+    if(range==='0-999')return n<1000;
+    if(range==='1000-9999')return n>=1000&&n<10000;
+    if(range==='10000-49999')return n>=10000&&n<50000;
+    if(range==='50000+')return n>=50000;
+    return true;
+  });
+
+  if(selected&&!sub){
+    const items=menus[selected]||[
+      'Available Account Types','Accounts by Region','Other Options'
+    ];
+
+    return shell(`
+      <button class="tab" onclick="state.accountsCategory='';state.accountsSubcategory='';render()">← Back to Categories</button>
+      <section class="hero">
+        <h2>${esc(selected)} Accounts</h2>
+        <p>Choose the type of account you want.</p>
+      </section>
+      <section class="card">
+        ${items.map(item=>`
+          <button class="order" style="display:block;width:100%;text-align:left;padding:15px;margin:8px 0;cursor:pointer"
+            onclick="state.accountsSubcategory=${JSON.stringify(item)};render()">
+            ${esc(item)}　›
+          </button>
+        `).join('')}
+        <button class="btn secondary" onclick="state.accountsSubcategory='';state.accountsYear='';state.accountsFollowers='';render()">View all ${esc(selected)} categories</button>
+      </section>
+    `);
+  }
+
+  if(selected&&sub){
+    return shell(`
+      <button class="tab" onclick="state.accountsSubcategory='';render()">← Back to ${esc(selected)} Menu</button>
+      <section class="hero">
+        <h2>${esc(selected)}</h2>
+        <p>${esc(sub)}</p>
+      </section>
+      <section class="card">
+        <label>Account creation year</label>
+        <select style="width:100%;padding:12px;margin:8px 0" onchange="state.accountsYear=this.value;render()">
+          <option value="">Any year</option>
+          ${Array.from({length:13},(_,i)=>2026-i).map(y=>`<option value="${y}" ${String(state.accountsYear||'')===String(y)?'selected':''}>${y}</option>`).join('')}
+        </select>
+        <label>Followers or page likes</label>
+        <select style="width:100%;padding:12px;margin:8px 0" onchange="state.accountsFollowers=this.value;render()">
+          <option value="">Any count</option>
+          <option value="0-999" ${state.accountsFollowers==='0-999'?'selected':''}>0–999</option>
+          <option value="1000-9999" ${state.accountsFollowers==='1000-9999'?'selected':''}>1,000–9,999</option>
+          <option value="10000-49999" ${state.accountsFollowers==='10000-49999'?'selected':''}>10,000–49,999</option>
+          <option value="50000+" ${state.accountsFollowers==='50000+'?'selected':''}>50,000+</option>
+        </select>
+      </section>
+      <section class="card">
+        <h3>Available Listings (${listings.length})</h3>
+        ${!state.accountsCatalogLoaded?'<p class="hint">Loading listings…</p>':''}
+        ${state.accountsCatalogLoaded&&listings.length===0?'<div class="empty">No available listings in this category yet. Please check back later.</div>':''}
+        ${listings.map(a=>{
+          const message=[
+            'Hello Beyond the Binary Boost Hub.',
+            'I am interested in this account listing:',
+            'Listing ID: '+a.id,
+            'Platform: '+a.platform,
+            'Title: '+a.title,
+            'Category: '+(a.category||'Not specified'),
+            'Price: ₦'+Number(a.price_ngn||0).toLocaleString(),
+            'Please confirm availability and permitted transfer before payment.'
+          ].join('\n');
+          const contact='https://wa.me/2348120497174?text='+encodeURIComponent(message);
+          return `
+            <div class="order" style="margin:12px 0;padding:14px">
+              ${a.image_url?`<img src="${esc(a.image_url)}" alt="${esc(a.title)}" loading="lazy" style="width:100%;max-height:240px;object-fit:contain;border-radius:10px;margin-bottom:10px">`:''}
+              <h3>${esc(a.title||'Account listing')}</h3>
+              <p>${esc(a.description||'Contact us for listing details.')}</p>
+              <p><b>Price: ${money(a.price_ngn)}</b></p>
+              ${a.creation_year?`<p>Creation year: ${esc(a.creation_year)}</p>`:''}
+              ${a.follower_count!==null&&a.follower_count!==undefined?`<p>Followers/page likes: ${Number(a.follower_count).toLocaleString()}</p>`:''}
+              ${a.region?`<p>Region: ${esc(a.region)}</p>`:''}
+              ${a.features?`<p>Features: ${esc(Array.isArray(a.features)?a.features.join(', '):a.features)}</p>`:''}
+              <a class="btn" href="${contact}" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:12px">💬 Enquire on WhatsApp</a>
+            </div>
+          `;
+        }).join('')}
+        <p class="hint">Confirm availability and transfer eligibility before paying. Never send passwords or verification codes before an authorized transfer is agreed.</p>
       </section>
     `);
   }
 
   return shell(`
-    <button class="tab"
-      onclick="state.view='home';render()">
-      ← Back Home
-    </button>
-
+    <button class="tab" onclick="state.view='home';render()">← Back Home</button>
     <section class="hero">
       <h2>🛍️ Accounts for Sale</h2>
-      <p>Choose a platform to explore its menu.</p>
+      <p>Select a platform to explore available listings.</p>
     </section>
-
     <section class="card">
-      ${platforms.map(platform=>`
-        <button class="order"
-          style="display:flex;width:100%;align-items:center;
-          gap:12px;padding:15px;margin:8px 0;cursor:pointer"
-          onclick="state.accountsCategory=${JSON.stringify(platform.name)};
-          state.accountsSubcategory='';
-          state.accountsYear='';
-          state.accountsFollowers='';
-          render()">
-          <span style="font-size:25px">${platform.emoji}</span>
-          <b>${esc(platform.name)}</b>
+      ${platforms.map(p=>`
+        <button class="order" style="display:flex;width:100%;align-items:center;gap:12px;padding:15px;margin:8px 0;cursor:pointer"
+          onclick="state.accountsCategory=${JSON.stringify(p.name)};state.accountsSubcategory='';state.accountsYear='';state.accountsFollowers='';render()">
+          <span style="font-size:25px">${p.emoji}</span>
+          <b>${esc(p.name)}</b>
           <span style="margin-left:auto">›</span>
         </button>
       `).join('')}
     </section>
   `);
 }
+
 
 
 function dashboardPage(){
