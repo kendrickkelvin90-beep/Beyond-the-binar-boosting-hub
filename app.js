@@ -1182,10 +1182,16 @@ function render(){
   if(statusTimer)clearInterval(statusTimer);
   statusTimer=null;
 
-  if(state.view==='accounts'){
-    app.innerHTML=accountsPage();
-    return;
-  }
+  
+if(state.view==='accounts'){
+  if(!state.accountsCatalogLoaded) loadAccountsCatalog();
+  app.innerHTML=accountsPage();
+  return;
+}
+
+    
+    
+
 
   if(!state.session){
     state.view='home';
