@@ -1905,6 +1905,17 @@ function admin(){
       <button type="button" class="admin-action" data-action="test-email">Send test email to admin</button>
     </section>
 
+    
+<section class="card" style="margin-bottom:16px">
+  <h3>Profit Summary</h3>
+  <p>Completed orders only</p>
+  <p>Total sales: <b>${money(totalSales)}</b></p>
+  <p>Recorded provider costs: <b>${money(recordedCosts)}</b></p>
+  <p>Estimated gross profit: <b>${money(estimatedProfit)}</b></p>
+  <p>Orders missing provider costs: <b>${missingCosts}</b></p>
+  <small>Estimate only; excludes payment fees and missing provider costs.</small>
+</section>
+
     <div class="admin-grid">
 
       <section class="card">
