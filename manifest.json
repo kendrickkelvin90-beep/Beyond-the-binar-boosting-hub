@@ -1,7 +1,8 @@
+
 {
-  "name": "Beyond The Binary Boosting Hub",
-  "short_name": "Boost Hub",
-  "description": "Boost your social media and manage your services in one place.",
+  "name": "Beyond the Binary",
+  "short_name": "Binary",
+  "description": "Beyond the Binary social media services",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
