@@ -2077,6 +2077,53 @@ function admin(){
 }
 
 
+async function saveAccountListing(e) {
+  e.preventDefault();
+
+  const form = e.target;
+  const data = Object.fromEntries(new FormData(form).entries());
+
+  const price = Number(data.price_ngn);
+
+  if (!Number.isFinite(price) || price <= 0) {
+    alert("Enter a price greater than ₦0.");
+    return;
+  }
+
+  const listing = {
+    platform: data.platform || "Other",
+    category: data.category || "General",
+    title: data.title || "Account listing",
+    description: data.description || "",
+    price_ngn: price,
+    creation_year: data.year_created
+      ? Number(data.year_created)
+      : null,
+    follower_count: data.followers_count
+      ? Number(data.followers_count)
+      : null,
+    region: data.region || "",
+    features: data.features || "",
+    image_url: data.image_url || "",
+    status: data.status === "sold" ? "sold" : "available",
+    updated_at: new Date().toISOString()
+  };
+
+  const { error } = await sb
+    .from("accounts_catalog")
+    .insert(listing);
+
+  if (error) {
+    alert("Could not save listing: " + error.message);
+    return;
+  }
+
+  form.reset();
+  alert("Account listing saved successfully!");
+  await loadAdmin();
+  render();
+}
+
 async function setAccountStatus(id, status){
   const { error } = await sb
     .from("accounts_catalog")
