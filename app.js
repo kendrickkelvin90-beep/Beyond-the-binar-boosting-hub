@@ -541,7 +541,9 @@ function accountsPage(){
     <section class="card">
       ${platforms.map(p=>`
         <button class="order" style="display:flex;width:100%;align-items:center;gap:12px;padding:15px;margin:8px 0;cursor:pointer"
-          onclick="openAccountsPlatform(${JSON.stringify(p.name)})">;state.accountsSubcategory='All Listings';state.accountsYear='';state.accountsFollowers='';render()">
+          
+          onclick="openAccountsPlatform(${JSON.stringify(p.name)})">
+
           <span style="font-size:25px">${p.emoji}</span>
           <b>${esc(p.name)}</b>
           <span style="margin-left:auto">›</span>
