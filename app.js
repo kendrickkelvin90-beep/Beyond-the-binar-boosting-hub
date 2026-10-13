@@ -413,10 +413,14 @@ function dashboardPage(){
 
 let foreignCatalogData = null;
 
+
+let foreignSelectedAppId = null;
+
 async function loadForeignCatalog(kind) {
 
 
-async function loadForeignCatalog(kind) {
+
+
   const output = document.getElementById('foreignCatalogOutput');
   if (!output) return;
 
