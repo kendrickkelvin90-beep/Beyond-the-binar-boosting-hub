@@ -415,7 +415,6 @@ let foreignCatalogData = null;
 
 async function loadForeignCatalog(kind) {
 
-let foreignSelectedAppId = null;
 
 async function loadForeignCatalog(kind) {
   const output = document.getElementById('foreignCatalogOutput');
