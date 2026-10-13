@@ -2012,6 +2012,61 @@ function admin(){
     </section>
   `);
 }
+
+async function saveAccountListing(e){
+  e.preventDefault();
+  const form = e.target;
+  const data = Object.fromEntries(new FormData(form).entries());
+
+  const listing = {
+    platform: data.platform,
+    category: data.category || "General",
+    title: data.title,
+    description: data.description || "",
+    price_ngn: Number(data.price_ngn || 0),
+    year_created: data.year_created ? Number(data.year_created) : null,
+    followers_count: Number(data.followers_count || 0),
+    region: data.region || "",
+    features: data.features || "",
+    image_url: data.image_url || "",
+    status: data.status || "available",
+    updated_at: new Date().toISOString()
+  };
+
+  const { error } = await sb
+    .from("accounts_catalog")
+    .insert(listing);
+
+  if (error) {
+    alert("Could not save listing: " + error.message);
+    return;
+  }
+
+  form.reset();
+  alert("Account listing saved successfully.");
+  await loadAdmin();
+  render();
+}
+
+async function setAccountStatus(id, status){
+  const { error } = await sb
+    .from("accounts_catalog")
+    .update({
+      status,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", id);
+
+  if (error) {
+    alert("Could not update listing: " + error.message);
+    return;
+  }
+
+  alert("Listing status updated.");
+  await loadAdmin();
+  render();
+}
+
 async function approveTopup(id){
   const{error}=await sb.rpc('approve_wallet_topup',{p_topup_id:id});
   if(error){
