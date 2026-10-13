@@ -2010,6 +2010,69 @@ function admin(){
         : '<div class="empty">No orders.</div>'
       }
     </section>
+     <section class="card" style="margin-top:20px;padding:16px">
+      <h2>Upload Account for Sale</h2>
+
+      <form onsubmit="saveAccountListing(event)">
+        <label>Account Platform</label>
+        <select name="platform" required>
+          <option value="">Choose platform</option>
+          <option>Instagram</option>
+          <option>TikTok</option>
+          <option>Facebook</option>
+          <option>Snapchat</option>
+          <option>Telegram</option>
+          <option>X</option>
+          <option>Spotify</option>
+          <option>Grindr</option>
+          <option>Tinder</option>
+          <option>Bumble</option>
+          <option>Badoo</option>
+          <option>Hinge</option>
+          <option>OnlyFans</option>
+          <option>Fansly</option>
+          <option>Google Voice</option>
+          <option>Other</option>
+        </select>
+
+        <label>Category</label>
+        <input name="category" placeholder="e.g. Dating, Social Media">
+
+        <label>Listing Title</label>
+        <input name="title" required placeholder="Account title">
+
+        <label>Price in Naira</label>
+        <input name="price_ngn" type="number" min="0" required>
+
+        <label>Year Created</label>
+        <input name="year_created" type="number" min="2000" max="2026">
+
+        <label>Followers / Page Likes</label>
+        <input name="followers_count" type="number" min="0">
+
+        <label>Region or Country</label>
+        <input name="region" placeholder="e.g. Nigeria, USA">
+
+        <label>Account Features</label>
+        <input name="features" placeholder="e.g. verified email, page likes">
+
+        <label>Image URL</label>
+        <input name="image_url" type="url" placeholder="https://...">
+
+        <label>Description</label>
+        <textarea name="description" rows="3"
+          placeholder="Describe the account"></textarea>
+
+        <label>Listing Status</label>
+        <select name="status">
+          <option value="available">Available</option>
+          <option value="reserved">Reserved</option>
+          <option value="sold">Sold</option>
+        </select>
+
+        <button type="submit" class="tab">Save Account Listing</button>
+      </form>
+    </section>
   `);
 }
 
