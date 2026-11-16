@@ -1962,6 +1962,29 @@ function admin(){
   const missingCosts=completedOrders.filter(o=>o.provider_charge_ngn==null).length;
   const estimatedProfit=totalSales-recordedCosts;
 
+  // Provider/service reliability is based on recorded order outcomes and customer reports.
+  const serviceHealthMap=new Map();
+  state.adminOrders.forEach(o=>{
+    const key=[o.provider_service_id??'unmapped',o.platform||'Unknown',o.service||'Unknown'].join('|');
+    if(!serviceHealthMap.has(key)){
+      serviceHealthMap.set(key,{id:o.provider_service_id,platform:o.platform||'Unknown',service:o.service||'Unknown',total:0,completed:0,failed:0,cancelled:0,refillPending:0,refillFailed:0});
+    }
+    const row=serviceHealthMap.get(key);
+    row.total++;
+    const status=String(o.status||'').toLowerCase();
+    if(status==='completed')row.completed++;
+    if(status==='failed')row.failed++;
+    if(status==='cancelled'||status==='canceled')row.cancelled++;
+    const refillStatus=String(o.provider_refill_status||'').toLowerCase();
+    if(o.provider_refill_id || refillStatus==='pending' || refillStatus==='in progress')row.refillPending++;
+    if(/failed|error|rejected|not available/.test(refillStatus))row.refillFailed++;
+  });
+  const serviceHealth=[...serviceHealthMap.values()].map(row=>{
+    row.reports=state.dropReports.filter(r=>state.adminOrders.some(o=>o.id===r.order_id && String(o.provider_service_id??'unmapped')===String(row.id??'unmapped') && (o.platform||'Unknown')===row.platform && (o.service||'Unknown')===row.service)).length;
+    row.reportRate=row.completed?Math.round(row.reports/row.completed*100):0;
+    return row;
+  }).sort((a,b)=>(b.reports-a.reports)||(b.failed+b.cancelled-a.failed-a.cancelled)||b.total-a.total);
+
   return shell(`
     <section class="hero">
       <small>ADMIN CONTROL PANEL</small>
@@ -1980,6 +2003,28 @@ function admin(){
   <p>Orders missing provider costs: <b>${missingCosts}</b></p>
   <small>Estimate only; excludes payment fees and missing provider costs.</small>
 </section>
+
+    <section class="card" style="margin:16px 0">
+      <div class="title">
+        <div class="num">05</div>
+        <div>
+          <h3>Provider & service reliability</h3>
+          <p>Recorded order outcomes, refill status and customer-reported drops by service.</p>
+        </div>
+      </div>
+      ${serviceHealth.length ? serviceHealth.map(s=>`
+        <div class="order">
+          <div class="orderhead">
+            <b>${esc(s.platform)} · ${esc(s.service)}</b>
+            <b>${s.reports ? 'Customer reports: '+s.reports : 'No reports'}</b>
+          </div>
+          <small>Provider service ID: ${s.id==null?'Not recorded':esc(s.id)} · ${s.total} total orders · ${s.completed} completed</small>
+          <p style="margin:8px 0">Failed: <b>${s.failed}</b> · Cancelled: <b>${s.cancelled}</b> · Refill pending: <b>${s.refillPending}</b> · Refill errors: <b>${s.refillFailed}</b></p>
+          <small>Customer-reported drop rate: ${s.completed? s.reportRate+'% of completed orders':'Not enough completed orders to calculate'}</small>
+        </div>
+      `).join('') : '<div class="empty">No provider orders recorded yet.</div>'}
+      <small>These are operational indicators from recorded orders and customer reports, not a live provider uptime test. A report rate is not proof that every reported drop was provider-caused.</small>
+    </section>
 
     <div class="admin-grid">
 
