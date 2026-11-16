@@ -82,7 +82,7 @@ function getFixedPrice(serviceType, quantity) {
   
 
 const serviceName={followers:'Followers',likes:'Likes',views:'Views'};
-let state={session:null,profile:null,orders:[],balance:0,topups:[],customers:[],adminOrders:[],adminTopups:[],walletBalances:{},providerServices:[],accountsCatalog:[],accountsCatalogLoaded:false,accountEditingId:null,view:'home'};
+let state={session:null,profile:null,orders:[],balance:0,topups:[],customers:[],adminOrders:[],adminTopups:[],dropReports:[],walletBalances:{},providerServices:[],accountsCatalog:[],accountsCatalogLoaded:false,accountEditingId:null,view:'home'};
 let statusTimer=null;
 const app=document.getElementById('app');
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
@@ -201,7 +201,26 @@ async function refresh(){
 }
 async function loadOrders(){if(!state.profile)return;const [o,w,t]=await Promise.all([sb.from('boost_orders').select('*').eq('user_id',state.profile.id).order('created_at',{ascending:false}),sb.from('wallet_transactions').select('amount_ngn').eq('user_id',state.profile.id),sb.from('wallet_topups').select('*').eq('user_id',state.profile.id).order('created_at',{ascending:false})]);state.orders=o.data||[];state.balance=(w.data||[]).reduce((a,x)=>a+Number(x.amount_ngn||0),0);state.topups=t.data||[];if(state.profile.role==='admin')await loadAdmin()}
 
-async function loadAdmin(){const [u,o,w,t,c]=await Promise.all([sb.from('users').select('*').order('created_at',{ascending:false}),sb.from('boost_orders').select('*').order('created_at',{ascending:false}),sb.from('wallet_transactions').select('user_id,amount_ngn'),sb.from('wallet_topups').select('*').order('created_at',{ascending:false}),sb.from('accounts_catalog').select('*').order('created_at',{ascending:false})]);state.customers=u.data||[];state.adminOrders=o.data||[];state.adminTopups=t.data||[];state.accountsCatalog=c.data||[];state.accountsCatalogLoaded=!c.error;state.walletBalances={};(w.data||[]).forEach(x=>{state.walletBalances[x.user_id]=(state.walletBalances[x.user_id]||0)+Number(x.amount_ngn||0)})}
+async function loadAdmin(){
+  const [u,o,w,t,c,d]=await Promise.all([
+    sb.from('users').select('*').order('created_at',{ascending:false}),
+    sb.from('boost_orders').select('*').order('created_at',{ascending:false}),
+    sb.from('wallet_transactions').select('user_id,amount_ngn'),
+    sb.from('wallet_topups').select('*').order('created_at',{ascending:false}),
+    sb.from('accounts_catalog').select('*').order('created_at',{ascending:false}),
+    sb.from('boost_order_drop_reports').select('*').order('created_at',{ascending:false})
+  ]);
+  state.customers=u.data||[];
+  state.adminOrders=o.data||[];
+  state.adminTopups=t.data||[];
+  state.accountsCatalog=c.data||[];
+  state.dropReports=d.data||[];
+  state.accountsCatalogLoaded=!c.error;
+  state.walletBalances={};
+  (w.data||[]).forEach(x=>{
+    state.walletBalances[x.user_id]=(state.walletBalances[x.user_id]||0)+Number(x.amount_ngn||0)
+  });
+}
 
 function topupHtml(rows){if(!rows.length)return '<div class="empty">No wallet funding requests yet.</div>';return rows.map(t=>`<div class="order"><div class="orderhead"><b>Top-up #${esc(t.id)}</b><b>${money(t.amount_ngn)}</b></div><small>Reference: ${esc(t.payment_reference||'Not provided')}</small><div class="status" style="margin-top:9px">${esc(t.status)}</div></div>`).join('')}
 
@@ -1830,6 +1849,15 @@ function ordersHtml(rows){
               Refresh delivery status
             </button>
           `:''}
+          ${completed && o.provider_refill_eligible ? `
+            <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
+              <button class="btn secondary" type="button"
+                onclick="event.preventDefault();event.stopPropagation();reportDrop(${Number(o.id)})">
+                Report missing followers / engagement
+              </button>
+              ${o.provider_refill_status ? `<small style="display:block;margin-top:7px">Refill status: ${esc(o.provider_refill_status)}</small>` : ''}
+            </div>
+          ` : ''}
         </div>
       </details>
     `;
@@ -1864,6 +1892,43 @@ function ordersHtml(rows){
       
     
 
+
+async function reportDrop(orderId){
+  const rawRemaining=prompt("If you can see the current remaining count, enter it. Otherwise leave blank.");
+  if(rawRemaining===null)return;
+  const reportedRemaining=rawRemaining.trim()===""?null:Number(rawRemaining);
+  if(reportedRemaining!==null&&(!Number.isInteger(reportedRemaining)||reportedRemaining<0)){
+    alert("Enter a valid non-negative whole number, or leave it blank.");
+    return;
+  }
+  const details=prompt("Briefly describe what dropped (optional).")||"";
+  const {error}=await sb.from("boost_order_drop_reports").insert({
+    order_id:Number(orderId),
+    user_id:state.profile.id,
+    reported_remaining:reportedRemaining,
+    details:details.trim()
+  });
+  if(error){
+    alert(error.code==="23505"
+      ?"A drop report is already open for this order. Our team can review that report."
+      :"Could not submit the report: "+error.message);
+    return;
+  }
+  alert("Your drop report has been submitted. We will check refill eligibility and the provider response.");
+  await refreshProviderStatus(orderId);
+  await loadOrders();
+  render();
+}
+
+async function setDropReportStatus(id,status){
+  const adminNote=prompt("Optional admin note:")||"";
+  const {error}=await sb.from("boost_order_drop_reports")
+    .update({status,admin_note:adminNote.trim(),updated_at:new Date().toISOString()})
+    .eq("id",id);
+  if(error){alert("Could not update report: "+error.message);return;}
+  await loadOrders();
+  render();
+}
 
 async function refreshProviderStatus(orderId){
   const msg=document.getElementById('orderMsg');
@@ -2041,6 +2106,32 @@ function admin(){
         `).join('')
         : '<div class="empty">No orders.</div>'
       }
+    </section>
+     <section class="card" style="margin-top:18px">
+      <div class="title">
+        <div class="num">04</div>
+        <div>
+          <h3>Customer drop reports</h3>
+          <p>Review missing followers, likes or other refill-eligible delivery.</p>
+        </div>
+      </div>
+      ${state.dropReports.length ? state.dropReports.map(r=>`
+        <div class="order">
+          <div class="orderhead">
+            <b>Report #${esc(r.id)} · Order #${esc(r.order_id)}</b>
+            <b>${esc(r.status)}</b>
+          </div>
+          <small>Customer #${esc(r.user_id)} · ${r.created_at?esc(new Date(r.created_at).toLocaleString()):'—'}</small>
+          ${r.reported_remaining!=null?`<p>Reported remaining: ${Number(r.reported_remaining).toLocaleString()}</p>`:''}
+          ${r.details?`<p>${esc(r.details)}</p>`:''}
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <button type="button" class="tab admin-action" data-action="drop-report-status" data-id="${r.id}" data-status="reviewing">Reviewing</button>
+            <button type="button" class="tab admin-action" data-action="drop-report-status" data-id="${r.id}" data-status="resolved">Resolved</button>
+            <button type="button" class="tab admin-action" data-action="drop-report-status" data-id="${r.id}" data-status="rejected">Reject</button>
+          </div>
+          ${r.admin_note?`<small>Admin note: ${esc(r.admin_note)}</small>`:''}
+        </div>
+      `).join('') : '<div class="empty">No customer drop reports yet.</div>'}
     </section>
      <section class="card" style="margin-top:20px;padding:16px">
       <h2>Upload Account for Sale</h2>
@@ -2299,6 +2390,11 @@ document.addEventListener('click',async e=>{
   }
 
   return;
+  }
+
+  if(action==='drop-report-status'){
+    await setDropReportStatus(id,b.dataset.status);
+    return;
   }
 
   if(action==='credit'){
